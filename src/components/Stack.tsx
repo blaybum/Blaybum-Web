@@ -13,10 +13,10 @@ interface RowProps extends HTMLAttributes<HTMLElement> {
   gap?: Gap,
 }
 
-export const Column = ({
+export const Stack = ({
   align = 'flex-start',
   justify = 'flex-start',
-  gap = 'xs',
+  gap = 'none',
   children,
   ...props
 }: RowProps): ReactElement => {
@@ -33,13 +33,13 @@ export const Column = ({
 }
 
 const RowStyled = styled.div<{
-  gap: Gap,
-  align: Align,
-  justify: Justify,
+  gap: Gap;
+  align: Align;
+  justify: Justify;
 }>`
   display: flex;
   flex-direction: column;
   align-items: ${({align}) => align};
   justify-content: ${({justify}) => justify};
-  gap: ${({gap}) => theme.spacing[gap]}
+  gap: ${({gap}) => theme.spacing[gap]};
 `;

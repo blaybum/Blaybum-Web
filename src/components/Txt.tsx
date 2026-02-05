@@ -3,16 +3,17 @@ import styled from '@emotion/styled';
 import type { HTMLAttributes, ReactElement } from 'react';
 
 const TxtSizeValues = {
-  title: '30px',
-  subtitle: '20px',
-  body: '16px',
-  caption: '14px',
+  title: '2.2rem',
+  subtitle: '1.2rem',
+  body: '1rem',
+  caption: '1rem',
 } as const
 
 const TxtWeightValues = {
-  regular: '400',
-  bold: '500',
+  light: '400',
+  regular: '500',
   semibold: '600',
+  bold: '700',
 } as const
 
 const TxtColorValues = {

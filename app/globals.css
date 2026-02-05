@@ -1,5 +1,14 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 @import "tailwindcss";
 @import "tw-animate-css";
+
+* {
+  font-family: "Pretendard";
+}
+
+body {
+  font-family: "Pretendard";
+}
 
 @custom-variant dark (&:is(.dark *));
 

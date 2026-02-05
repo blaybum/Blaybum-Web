@@ -1,12 +1,17 @@
 export const colors = {
+  white: '#FFFFFF',
+  black: '#000000',
+
   primary: {
     100: '#E9F5EA',
     500: '#4CAF50',
   },
+
   natural: {
     100: '#F5F5F5',
     700: '#757575',
   },
+  
   bg: {
     primary: '#FFFFFF',
     secondary: '#F5F5F5',
@@ -14,13 +19,14 @@ export const colors = {
 } as const
 
 export const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
-  xxl: 32,
-  xxxl: 48,
+  none: '0px',
+  xs: '4px',
+  sm: '8px',
+  md: '12px',
+  lg: '16px',
+  xl: '24px',
+  xxl: '32px',
+  xxxl: '48px',
 } as const
 
 export const theme = {

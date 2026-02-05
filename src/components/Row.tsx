@@ -16,7 +16,7 @@ interface RowProps extends HTMLAttributes<HTMLElement> {
 export const Row = ({
   align = 'flex-start',
   justify = 'flex-start',
-  gap = 'xs',
+  gap = 'none',
   children,
   ...props
 }: RowProps): ReactElement => {
@@ -33,13 +33,13 @@ export const Row = ({
 }
 
 const RowStyled = styled.div<{
-  gap: Gap,
-  align: Align,
-  justify: Justify,
+  gap: Gap;
+  align: Align;
+  justify: Justify;
 }>`
   display: flex;
   flex-direction: row;
   align-items: ${({align}) => align};
   justify-content: ${({justify}) => justify};
-  gap: ${({gap}) => theme.spacing[gap]}
+  gap: ${({gap}) => theme.spacing[gap]};
 `;
