@@ -1,6 +1,7 @@
-'use client'
+'use client';
 import styled from '@emotion/styled';
 import type { HTMLAttributes, ReactElement } from 'react';
+import { theme } from '@/styles/theme';
 
 const TxtSizeValues = {
   title: '2.2rem',
@@ -17,6 +18,7 @@ const TxtWeightValues = {
 } as const
 
 const TxtColorValues = {
+  highlight: theme.colors.primary[500],
   primary: '#212121',
   secondary: '#757575',
 } as const
@@ -59,7 +61,7 @@ const TxtStyled = styled.span<{
   weight: TxtWeight;
   color: TxtColor;
 }>`
-  font-size: ${({size}) => TxtSizeValues[size]};
-  font-weight: ${({weight}) => TxtWeightValues[weight]};
-  color: ${({color}) => TxtColorValues[color]};
+  font-size: ${({ size }) => TxtSizeValues[size]};
+  font-weight: ${({ weight }) => TxtWeightValues[weight]};
+  color: ${({ color }) => TxtColorValues[color]};
 `;

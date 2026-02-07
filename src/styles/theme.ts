@@ -5,10 +5,13 @@ export const colors = {
   primary: {
     100: '#E9F5EA',
     500: '#4CAF50',
+    600: '#3f9942',
   },
 
   natural: {
     100: '#F5F5F5',
+    200: '#E5E7EB',
+    300: '#d3d6da',
     700: '#757575',
   },
   
