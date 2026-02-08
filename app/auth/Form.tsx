@@ -2,7 +2,7 @@
 import * as Auth from "@/styles/pages/auth";
 import { useState } from "react";
 import { Row, Stack, Txt, Input } from "@/components/common";
-import { Icon, Line } from '@/styles/common';
+import { Icon, Line, Button } from '@/styles/common';
 import { EnvelopIcon, LockIcon, GoogleIcon, AppleIcon, InfoIcon, ShieldIcon, DatabaseIcon } from "@/asset/icons";
 
 const Form = () => {
@@ -55,7 +55,7 @@ const Form = () => {
               <Txt as='p' weight='light'> 로그인 상태 유지 </Txt>
             </Row>
           </Stack>
-          <Auth.Button onClick={onClickLogin}> 로그인 </Auth.Button>
+          <Button color='primary' onClick={onClickLogin}> 로그인 </Button>
           <Txt as='p' weight='light' color='secondary'> 비밀번호를 잊으셨나요? </Txt>
         </Stack>
       </Stack>
@@ -65,14 +65,14 @@ const Form = () => {
         <Line />
       </Row>
       <Stack gap='md' width='100%'>
-        <Auth.Oauth gap='sm' align='center' justify='center' onClick={onClickOauthGoogle}>
+        <Button color='muted' onClick={onClickOauthGoogle}>
           <GoogleIcon size={20} />
           <Txt as='p' weight='light'> Google </Txt>
-        </Auth.Oauth>
-        <Auth.Oauth gap='sm' align='center' justify='center' onClick={onClickOauthApple}>
+        </Button>
+        <Button color='muted' onClick={onClickOauthApple}>
           <AppleIcon size={20} />
           <Txt as='p' weight='light'> Apple </Txt>
-        </Auth.Oauth>
+        </Button>
       </Stack>
       <Row width='100%'> <Line /> </Row>
       <Auth.Info gap='lg'>
