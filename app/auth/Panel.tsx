@@ -3,7 +3,7 @@ import * as Auth from "@/styles/pages/auth";
 import { Row, Stack, Txt } from "@/components/common";
 import { Icon } from "@/styles/common";
 import { SproutIcon, ChartIcon, ClipBoardIcon, ChatIcon, ShieldIcon, ClockIcon, HeadsetIcon } from "@/asset/icons";
-import { ReactElement } from 'react'
+import { ReactElement } from 'react';
 
 const Card = ({ icon, title, body }: {
   icon: ReactElement,
