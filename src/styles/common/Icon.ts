@@ -23,9 +23,9 @@ const getIconSize = (
       `;
     case 'small':
       return `
-        min-width: 20px;
-        min-height: 20px;
-        border-radius: 12px;
+        min-width: 32px;
+        min-height: 32px;
+        border-radius: 8px;
       `;
   }
 }
