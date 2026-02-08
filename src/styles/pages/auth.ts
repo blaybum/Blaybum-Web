@@ -10,7 +10,7 @@ export const Container = styled(Row)`
 
 export const Panel = styled(Stack)`
   width: 50vw;
-  padding: 0 160px;
+  padding: 0 6.2rem;
   color: ${theme.colors.primary[500]};
   background: linear-gradient(
     to right,
@@ -38,7 +38,7 @@ export const Info = styled(Row)`
 
 export const Form = styled(Stack)`
   width: 50vw;
-  padding: 200px 160px;
+  padding: 8rem 6.2rem;
 `;
 
 export const Checkbox = styled.input`

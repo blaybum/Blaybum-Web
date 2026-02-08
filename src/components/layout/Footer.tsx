@@ -6,7 +6,7 @@ import * as Styled from '@/styles/layout/footer';
 
 const Footer = () => {
   return (
-    <Styled.Container align='center' gap='xxl'>
+    <Styled.Container align='center' gap='xl'>
       <Styled.Header>
         <Styled.HeaderLeft align='center' gap='sm'>
           <Icon size='small' color='primary'> <SproutIcon size={16} /> </Icon>

@@ -4,7 +4,7 @@ import { Row, Stack, Txt } from '@/components/common';
 import { theme } from '@/styles/theme';
 
 export const Container = styled(Stack)`
-  padding: 40px 160px;
+  padding: 2rem 8rem;
   border-top: 1px solid ${theme.colors.natural[200]};
   background-color: ${theme.colors.bg['secondary']};
 `;
