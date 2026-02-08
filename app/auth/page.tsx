@@ -1,5 +1,5 @@
 'use client'
-import { Row } from '@/components';
+import { Row } from '@/components/common';
 import { Container } from '@/styles/pages/auth';
 import Panel from './Panel';
 import Form from './Form'

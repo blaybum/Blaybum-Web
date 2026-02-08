@@ -1,8 +1,8 @@
 'use client'
 import * as Auth from "@/styles/pages/auth";
 import { useState } from "react";
-import { Row, Stack, Txt, Input } from "@/components";
-import { Icon } from '@/styles/common';
+import { Row, Stack, Txt, Input } from "@/components/common";
+import { Icon, Line } from '@/styles/common';
 import { EnvelopIcon, LockIcon, GoogleIcon, AppleIcon, InfoIcon, ShieldIcon, DatabaseIcon } from "@/asset/icons";
 
 const Form = () => {
@@ -60,9 +60,9 @@ const Form = () => {
         </Stack>
       </Stack>
       <Row gap='lg' align='center' width='100%'>
-        <Auth.Line />
+        <Line />
         <Txt as='p' weight='light' color='secondary'> 또는 </Txt>
-        <Auth.Line />
+        <Line />
       </Row>
       <Stack gap='md' width='100%'>
         <Auth.Oauth gap='sm' align='center' justify='center' onClick={onClickOauthGoogle}>
@@ -74,7 +74,7 @@ const Form = () => {
           <Txt as='p' weight='light'> Apple </Txt>
         </Auth.Oauth>
       </Stack>
-      <Row width='100%'> <Auth.Line /> </Row>
+      <Row width='100%'> <Line /> </Row>
       <Auth.Info gap='lg'>
         <Icon size='medium' color='muted'> <InfoIcon size={24} /> </Icon>
         <Stack gap='xs'>

@@ -1,7 +1,7 @@
-'use client'
+'use client';
 import styled from '@emotion/styled';
 import { theme } from '@/styles/theme';
-import { Row, Stack } from '@/components';
+import { Row, Stack } from '@/components/common';
 
 export const Container = styled(Row)`
   min-height: 100vh;
@@ -60,12 +60,6 @@ export const Button = styled.button`
   &:hover {
     background-color: ${theme.colors.primary[600]};
   }
-`;
-
-export const Line = styled.div`
-  height: 1px;
-  flex: 1;
-  background-color: ${theme.colors.natural[200]};
 `;
 
 export const Oauth = styled(Row)`
