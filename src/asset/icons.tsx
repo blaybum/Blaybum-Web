@@ -45,9 +45,33 @@ export const AppleIcon = ({ size }: IconProps) => {
 }
 
 export const InfoIcon = ({ size }: IconProps) => {
-  return <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 16 16"><path fill="currentColor" fillRule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16M9 5a1 1 0 1 1-2 0a1 1 0 0 1 2 0M7 7a.75.75 0 0 0 0 1.5h.25v2h-1a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-1V7z" clipRule="evenodd"></path></svg>;
+  return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 16 16"><path fill="currentColor" fillRule="evenodd" d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16M9 5a1 1 0 1 1-2 0a1 1 0 0 1 2 0M7 7a.75.75 0 0 0 0 1.5h.25v2h-1a.75.75 0 0 0 0 1.5h3.5a.75.75 0 0 0 0-1.5h-1V7z" clipRule="evenodd"></path></svg>;
 }
 
 export const DatabaseIcon = ({ size }: IconProps) => {
-  return <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="currentColor" fillRule="evenodd" d="M20 9.704c-.454.36-.95.664-1.449.913C16.71 11.538 14.352 12 12 12s-4.71-.462-6.551-1.383A8.4 8.4 0 0 1 4 9.704V12c0 1.057.838 2.076 2.343 2.828C7.843 15.578 9.878 16 12 16s4.157-.421 5.657-1.172C19.162 14.076 20 13.058 20 12zm0 6a8.4 8.4 0 0 1-1.449.913C16.71 17.538 14.352 18 12 18s-4.71-.462-6.551-1.383c-.5-.25-.995-.554-1.449-.913V18c0 2.21 3.582 4 8 4s8-1.79 8-4zM20 6c0-2.21-3.582-4-8-4S4 3.79 4 6c0 1.058.838 2.076 2.343 2.828C7.843 9.578 9.878 10 12 10s4.157-.421 5.657-1.172C19.162 8.076 20 7.058 20 6" clipRule="evenodd"></path></svg>;
+  return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"><path fill="currentColor" fillRule="evenodd" d="M20 9.704c-.454.36-.95.664-1.449.913C16.71 11.538 14.352 12 12 12s-4.71-.462-6.551-1.383A8.4 8.4 0 0 1 4 9.704V12c0 1.057.838 2.076 2.343 2.828C7.843 15.578 9.878 16 12 16s4.157-.421 5.657-1.172C19.162 14.076 20 13.058 20 12zm0 6a8.4 8.4 0 0 1-1.449.913C16.71 17.538 14.352 18 12 18s-4.71-.462-6.551-1.383c-.5-.25-.995-.554-1.449-.913V18c0 2.21 3.582 4 8 4s8-1.79 8-4zM20 6c0-2.21-3.582-4-8-4S4 3.79 4 6c0 1.058.838 2.076 2.343 2.828C7.843 9.578 9.878 10 12 10s4.157-.421 5.657-1.172C19.162 8.076 20 7.058 20 6" clipRule="evenodd"></path></svg>;
+}
+
+export const CalendarIcon = ({ size }: IconProps) => {
+  return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 16 16"><g fill="currentColor"><path d="M5.75 7.5a.75.75 0 1 0 0 1.5a.75.75 0 0 0 0-1.5M5 10.25a.75.75 0 1 1 1.5 0a.75.75 0 0 1-1.5 0m5.25-2.75a.75.75 0 1 0 0 1.5a.75.75 0 0 0 0-1.5m-3 .75a.75.75 0 1 1 1.5 0a.75.75 0 0 1-1.5 0M8 9.5A.75.75 0 1 0 8 11a.75.75 0 0 0 0-1.5"></path><path fillRule="evenodd" d="M4.75 1a.75.75 0 0 0-.75.75V3a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2V1.75a.75.75 0 0 0-1.5 0V3h-5V1.75A.75.75 0 0 0 4.75 1M3.5 7a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v4.5a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1z" clipRule="evenodd"></path></g></svg>;
+}
+
+export const PeopleIcon = ({ size }: IconProps) => {
+  return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"><path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3s1.34 3 3 3m-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5S5 6.34 5 8s1.34 3 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5m8 0c-.29 0-.62.02-.97.05c1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5"></path></svg>;
+}
+
+export const AddOneIcon = ({ size }: IconProps) => {
+  return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 48 48"><defs><mask id="SVG62ezZdxw"><g fill="none" strokeLinejoin="round" strokeWidth={4}><path fill="#fff" stroke="#fff" d="M24 44c11.046 0 20-8.954 20-20S35.046 4 24 4S4 12.954 4 24s8.954 20 20 20Z"></path><path stroke="#000" strokeLinecap="round" d="M24 16v16m-8-8h16"></path></g></mask></defs><path fill="currentColor" d="M0 0h48v48H0z" mask="url(#SVG62ezZdxw)"></path></svg>;
+}
+
+export const NotificationIcon = ({ size }: IconProps) => {
+  return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"><g fill="none"><path d="m12.594 23.258l-.012.002l-.071.035l-.02.004l-.014-.004l-.071-.036q-.016-.004-.024.006l-.004.01l-.017.428l.005.02l.01.013l.104.074l.015.004l.012-.004l.104-.074l.012-.016l.004-.017l-.017-.427q-.004-.016-.016-.018m.264-.113l-.014.002l-.184.093l-.01.01l-.003.011l.018.43l.005.012l.008.008l.201.092q.019.005.029-.008l.004-.014l-.034-.614q-.005-.019-.02-.022m-.715.002a.02.02 0 0 0-.027.006l-.006.014l-.034.614q.001.018.017.024l.015-.002l.201-.093l.01-.008l.003-.011l.018-.43l-.003-.012l-.01-.01z"></path><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7v3.528a1 1 0 0 1-.105.447l-1.717 3.433A1.1 1.1 0 0 0 4.162 18h15.676a1.1 1.1 0 0 0 .984-1.592l-1.716-3.433a1 1 0 0 1-.106-.447V9a7 7 0 0 0-7-7m0 19a3 3 0 0 1-2.83-2h5.66A3 3 0 0 1 12 21"></path></g></svg>;
+}
+
+export const SettingIcon = ({ size }: IconProps) => {
+  return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"><path fill="currentColor" d="M14.82 1H9.18l-.647 3.237a8.5 8.5 0 0 0-1.52.88l-3.13-1.059l-2.819 4.884l2.481 2.18a8.6 8.6 0 0 0 0 1.756l-2.481 2.18l2.82 4.884l3.129-1.058c.472.342.98.638 1.52.879L9.18 23h5.64l.647-3.237a8.5 8.5 0 0 0 1.52-.88l3.13 1.059l2.82-4.884l-2.482-2.18a8.6 8.6 0 0 0 0-1.756l2.481-2.18l-2.82-4.884l-3.128 1.058a8.5 8.5 0 0 0-1.52-.879zM12 16a4 4 0 1 1 0-8a4 4 0 0 1 0 8"></path></svg>;
+}
+
+export const KebabMenuIcon = ({ size }: IconProps) => {
+  return <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24"><path fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth={3.75} d="M12 12h.01v.01H12zm0-7h.01v.01H12zm0 14h.01v.01H12z"></path></svg>;
 }
