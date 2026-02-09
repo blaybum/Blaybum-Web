@@ -4,11 +4,6 @@ import { motion } from 'framer-motion';
 
 type PlantStage = 'empty' | 'seed' | 'sprout';
 
-interface GridItemProps {
-    stage: PlantStage;
-    delay: number;
-}
-
 const PlantIcon = ({ stage }: { stage: PlantStage }) => {
     if (stage === 'empty') return null;
 
@@ -35,8 +30,9 @@ const PlantIcon = ({ stage }: { stage: PlantStage }) => {
     );
 };
 
-export default function FarmGrid() {
-    const gridData: PlantStage[] = ['seed', 'empty', 'seed', 'seed', 'sprout', 'empty'];
+export default function FarmGrid({ gridData }: { gridData?: PlantStage[] }) {
+    const fallbackGrid: PlantStage[] = ['seed', 'empty', 'seed', 'seed', 'sprout', 'empty'];
+    const data = gridData && gridData.length > 0 ? gridData : fallbackGrid;
 
     return (
         <div className="relative p-3 bg-[#E6DCC3] rounded-[24px] shadow-[0_4px_0_0_#D6CCB3]">
@@ -46,7 +42,7 @@ export default function FarmGrid() {
                 </div>
             </div>
             <div className="bg-[#98E6C7] rounded-[20px] p-0.5 grid grid-cols-3 grid-rows-2 gap-[1px] overflow-hidden border-4 border-[#8BD9BA]">
-                {gridData.map((stage, i) => (
+                {data.map((stage, i) => (
                     <div
                         key={i}
                         className="bg-[#90DFC2] h-32 flex items-center justify-center relative border-[0.5px] border-white/20"

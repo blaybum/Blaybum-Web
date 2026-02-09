@@ -6,15 +6,32 @@ import { Play, Pause, Square } from 'lucide-react';
 interface TimerProps {
     onComplete?: (time: number) => void; // time in seconds
     onStop?: (time: number) => void;
+    onStart?: (time: number) => void;
+    onPause?: (time: number) => void;
+    onResume?: (time: number) => void;
 }
 
-export default function Timer({ onComplete, onStop }: TimerProps) {
+export default function Timer({ onComplete, onStop, onStart, onPause, onResume }: TimerProps) {
     const [seconds, setSeconds] = useState(0);
     const [isActive, setIsActive] = useState(false);
+    const [hasStarted, setHasStarted] = useState(false);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const toggleTimer = () => {
-        setIsActive(!isActive);
+        setIsActive((prev) => {
+            const next = !prev;
+            if (!prev && next) {
+                if (!hasStarted) {
+                    setHasStarted(true);
+                    onStart?.(seconds);
+                } else {
+                    onResume?.(seconds);
+                }
+            } else if (prev && !next) {
+                onPause?.(seconds);
+            }
+            return next;
+        });
     };
 
     const stopTimer = () => {

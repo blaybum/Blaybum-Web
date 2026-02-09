@@ -1,9 +1,21 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Sprout, User } from 'lucide-react';
 
 export default function RoleSelectionPage() {
+  const router = useRouter();
+
+  const handleMentee = () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      router.push('/auth');
+      return;
+    }
+    router.push('/goal');
+  };
+
   return (
     <div className="min-h-screen bg-[#FDFBF4] flex flex-col items-center justify-center p-6 font-sans">
       <div className="w-full max-w-md space-y-10">
@@ -23,7 +35,7 @@ export default function RoleSelectionPage() {
         <div className="space-y-4">
 
           {/* Mentee Card */}
-          <Link href="/goal" className="block group">
+          <button onClick={handleMentee} className="block group w-full text-left">
             <div className="bg-white rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-transparent transition-all duration-200 group-hover:border-[#98E6C7] group-active:scale-[0.98]">
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 flex items-center justify-center">
@@ -39,7 +51,7 @@ export default function RoleSelectionPage() {
                 </div>
               </div>
             </div>
-          </Link>
+          </button>
 
           {/* Mentor Card */}
           <Link href="/auth" className="block group">

@@ -1,13 +1,91 @@
 'use client';
 
 import Link from 'next/link';
-import { User, MessageCircle, Trophy, UserPlus } from 'lucide-react';
-import Image from 'next/image';
-import { useState } from 'react';
+import { MessageCircle, Trophy, UserPlus, LogOut, Edit3 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { api } from '@/lib/api';
+import useAuthGuard from '@/lib/useAuthGuard';
+import type { PomoMeStatisticsResponse, PlannerDailyStatisticsResponse, PlannerWeeklyStatisticsResponse, UserRead } from '@/lib/api/types';
 
 export default function MyPage() {
-    // Mock state: User has no mentor initially
-    const [hasMentor, setHasMentor] = useState(false);
+    const isAuthed = useAuthGuard();
+    const hasMentor = false;
+    const [user, setUser] = useState<UserRead | null>(null);
+    const [stats, setStats] = useState<PomoMeStatisticsResponse | null>(null);
+    const [weeklyStats, setWeeklyStats] = useState<PlannerWeeklyStatisticsResponse | null>(null);
+    const [dailyStats, setDailyStats] = useState<PlannerDailyStatisticsResponse | null>(null);
+
+    const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
+    const weekStartStr = useMemo(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - d.getDay());
+        return d.toISOString().slice(0, 10);
+    }, []);
+
+    useEffect(() => {
+        const load = async () => {
+            if (!isAuthed) return;
+            const me = await api.auth.getMe();
+            setUser(me);
+            const [fetchedStats, weekly, daily] = await Promise.all([
+                api.statistics.pomoMe(),
+                api.statistics.plannerWeekly(weekStartStr),
+                api.statistics.daily(todayStr),
+            ]);
+            setStats(fetchedStats);
+            setWeeklyStats(weekly);
+            setDailyStats(daily);
+            await api.auth.getUser(me.id);
+        };
+        load();
+    }, [isAuthed, todayStr, weekStartStr]);
+
+    const handleLogout = async () => {
+        await api.auth.logout();
+        alert('로그아웃되었습니다.');
+    };
+
+    const handleProfileUpdate = async () => {
+        if (!user) return;
+        const name = window.prompt('새 이름을 입력해주세요.', user.full_name ?? user.username ?? '') ?? '';
+        if (!name) return;
+        const updated = await api.auth.patchMe({ full_name: name });
+        setUser(updated);
+        await api.auth.patchUser(updated.id, { full_name: name });
+        alert('프로필이 업데이트되었습니다.');
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!user) return;
+        const confirmText = window.prompt('정말 삭제하려면 DELETE를 입력해주세요.');
+        if (confirmText !== 'DELETE') return;
+        await api.auth.deleteUser(user.id);
+        alert('계정 삭제 요청이 완료되었습니다.');
+    };
+
+    const handleRefreshToken = async () => {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken) {
+            alert('리프레시 토큰이 없습니다.');
+            return;
+        }
+        const res = await api.auth.refresh(refreshToken);
+        if (res?.access_token) localStorage.setItem('access_token', res.access_token);
+        if (res?.refresh_token) localStorage.setItem('refresh_token', res.refresh_token);
+        alert('토큰을 갱신했습니다.');
+    };
+
+    const weeklyRate = weeklyStats ? Math.round(weeklyStats.completion_rate * 100) : 0;
+    const avgDailyMinutes = stats?.average_daily_minutes ?? 0;
+    const todayRate = dailyStats ? Math.round(dailyStats.completion_rate * 100) : 0;
+
+    if (!isAuthed) {
+        return (
+            <div className="min-h-screen flex items-center justify-center text-sm text-gray-500">
+                로그인 확인 중...
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-white to-[#F0FDF4] flex flex-col pb-24">
@@ -17,6 +95,16 @@ export default function MyPage() {
                 <h1 className="text-2xl font-bold text-gray-900">마이페이지</h1>
                 <p className="text-gray-500 text-sm mt-1">지금까지 이렇게 자랐어요</p>
             </div>
+
+            {user && (
+                <div className="mx-6 mb-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <div className="text-sm font-bold text-gray-900">{user.full_name ?? user.username ?? user.email}</div>
+                    <div className="text-xs text-gray-500">{user.email}</div>
+                    <div className="text-[10px] text-gray-400 mt-1">
+                        계정 상태: {user.is_verified ? '인증됨' : '미인증'}
+                    </div>
+                </div>
+            )}
 
             {/* Character Section (Mock Image) */}
             <div className="relative w-full h-[280px] flex items-center justify-center mb-6">
@@ -35,7 +123,7 @@ export default function MyPage() {
                 </div>
 
                 {/* Edit Badge */}
-                <div className="absolute z-20 top-1/2 right-[28%] translate-x-2 translate-y-2 bg-green-100 p-2 rounded-full cursor-pointer shadow-md hover:bg-green-200 transition-colors">
+                <div className="absolute z-20 top-1/2 right-[28%] translate-x-2 translate-y-2 bg-green-100 p-2 rounded-full cursor-pointer shadow-md hover:bg-green-200 transition-colors" onClick={handleProfileUpdate}>
                     <div className="text-green-600 font-bold">🌱</div>
                 </div>
             </div>
@@ -47,22 +135,21 @@ export default function MyPage() {
                     <span className="text-xs font-normal text-gray-500 cursor-pointer">전체보기</span>
                 </h2>
 
-                {/* Subject Cards */}
+                {/* Summary Cards */}
                 <Link href="/goal/my/stats/국어">
                     <div className="bg-[#FFF1F2] rounded-2xl p-5 mb-4 hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer border border-red-100">
                         <div className="flex justify-between items-center mb-3">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-[#EF4444] rounded-full flex items-center justify-center text-white font-bold shadow-sm">국</div>
-                                <span className="font-bold text-gray-800 text-lg">국어</span>
+                                <div className="w-10 h-10 bg-[#EF4444] rounded-full flex items-center justify-center text-white font-bold shadow-sm">주</div>
+                                <span className="font-bold text-gray-800 text-lg">주간 달성률</span>
                             </div>
-                            <span className="text-[#EF4444] font-bold text-lg">78%</span>
+                            <span className="text-[#EF4444] font-bold text-lg">{weeklyRate}%</span>
                         </div>
-                        {/* Progress Bar */}
                         <div className="w-full h-3 bg-red-100 rounded-full overflow-hidden">
-                            <div className="w-[78%] h-full bg-[#EF4444] rounded-full" />
+                            <div className="h-full bg-[#EF4444] rounded-full" style={{ width: `${weeklyRate}%` }} />
                         </div>
                         <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                            <span className="text-red-500">▲ 12%</span> 문학 분석 능력 집중 향상
+                            이번 주 완료한 목표 비율이에요
                         </p>
                     </div>
                 </Link>
@@ -71,16 +158,16 @@ export default function MyPage() {
                     <div className="bg-[#EFF6FF] rounded-2xl p-5 hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer border border-blue-100">
                         <div className="flex justify-between items-center mb-3">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-[#3B82F6] rounded-full flex items-center justify-center text-white font-bold shadow-sm">영</div>
-                                <span className="font-bold text-gray-800 text-lg">영어</span>
+                                <div className="w-10 h-10 bg-[#3B82F6] rounded-full flex items-center justify-center text-white font-bold shadow-sm">평</div>
+                                <span className="font-bold text-gray-800 text-lg">평균 집중 시간</span>
                             </div>
-                            <span className="text-[#3B82F6] font-bold text-lg">65%</span>
+                            <span className="text-[#3B82F6] font-bold text-lg">{avgDailyMinutes}분</span>
                         </div>
                         <div className="w-full h-3 bg-blue-100 rounded-full overflow-hidden">
-                            <div className="w-[65%] h-full bg-[#3B82F6] rounded-full" />
+                            <div className="h-full bg-[#3B82F6] rounded-full" style={{ width: `${Math.min(100, avgDailyMinutes)}%` }} />
                         </div>
                         <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                            <span className="text-blue-500">▲ 5%</span> 독해 속도 향상 중
+                            하루 평균 집중 시간이에요
                         </p>
                     </div>
                 </Link>
@@ -141,20 +228,35 @@ export default function MyPage() {
                 </div>
                 <div className="flex gap-4">
                     <div className="flex-1 bg-white/60 backdrop-blur-sm rounded-xl py-4 flex flex-col items-center justify-center border border-white">
-                        <div className="text-2xl font-bold text-green-600">24</div>
+                        <div className="text-2xl font-bold text-green-600">{stats?.total_pomo_count ?? 0}</div>
                         <div className="text-xs text-gray-500">완료한 과제</div>
                     </div>
                     <div className="flex-1 bg-white/60 backdrop-blur-sm rounded-xl py-4 flex flex-col items-center justify-center border border-white">
-                        <div className="text-2xl font-bold text-blue-600">48h</div>
+                        <div className="text-2xl font-bold text-blue-600">{stats ? `${Math.round(stats.total_study_time_minutes / 60)}h` : '0h'}</div>
                         <div className="text-xs text-gray-500">총 공부 시간</div>
                     </div>
                 </div>
             </div>
 
-            {/* Hidden debug toggle for demo */}
-            <div className="text-center opacity-0 hover:opacity-100 transition-opacity mb-8">
-                <button onClick={() => setHasMentor(!hasMentor)} className="text-xs bg-gray-200 px-2 py-1 rounded">
-                    Toggle Mentor State (Debug)
+            <div className="mx-6 mb-6 text-xs text-gray-500">
+                오늘 완료율 {todayRate}% · 방해 {stats?.total_distraction_count ?? 0}회
+            </div>
+
+            <div className="mx-6 mb-6 flex gap-2">
+                <button onClick={handleProfileUpdate} className="flex-1 bg-white border rounded-xl py-3 text-sm font-semibold text-gray-700 flex items-center justify-center gap-2">
+                    <Edit3 size={16} /> 프로필 수정
+                </button>
+                <button onClick={handleLogout} className="flex-1 bg-red-50 border rounded-xl py-3 text-sm font-semibold text-red-600 flex items-center justify-center gap-2">
+                    <LogOut size={16} /> 로그아웃
+                </button>
+            </div>
+
+            <div className="mx-6 mb-8 flex gap-2">
+                <button onClick={handleDeleteAccount} className="flex-1 text-xs bg-red-100 px-2 py-2 rounded">
+                    계정 삭제
+                </button>
+                <button onClick={handleRefreshToken} className="flex-1 text-xs bg-blue-100 px-2 py-2 rounded">
+                    토큰 갱신
                 </button>
             </div>
         </div>
