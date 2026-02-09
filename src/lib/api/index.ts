@@ -23,9 +23,42 @@ import type {
 
 const BASE_URL = '/api/proxy';
 
+// Flag to prevent multiple refresh attempts
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+async function tryRefreshToken(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) return false;
+
+  try {
+    const response = await fetch(`${BASE_URL}/auth/jwt/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    if (data?.access_token) {
+      localStorage.setItem('access_token', data.access_token);
+      if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
+      if (data.token_type) localStorage.setItem('token_type', data.token_type);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retryCount = 0
 ): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
   const tokenType = typeof window !== 'undefined' ? localStorage.getItem('token_type') : null;
@@ -44,7 +77,24 @@ async function request<T>(
   const response = await fetch(`${BASE_URL}${endpoint}`, config);
 
   if (!response.ok) {
-    if (response.status === 401 && typeof window !== 'undefined') {
+    // Handle 401 with token refresh
+    if (response.status === 401 && typeof window !== 'undefined' && retryCount === 0) {
+      // Try to refresh the token
+      if (!isRefreshing) {
+        isRefreshing = true;
+        refreshPromise = tryRefreshToken();
+      }
+
+      const refreshSuccess = await refreshPromise;
+      isRefreshing = false;
+      refreshPromise = null;
+
+      if (refreshSuccess) {
+        // Retry the original request with new token
+        return request<T>(endpoint, options, retryCount + 1);
+      }
+
+      // Refresh failed - clear tokens and redirect
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('token_type');
