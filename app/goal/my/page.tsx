@@ -39,8 +39,7 @@ export default function MyPage() {
                 if (weeklyResult.status === 'fulfilled') setWeeklyStats(weeklyResult.value);
                 if (dailyResult.status === 'fulfilled') setDailyStats(dailyResult.value);
 
-                // getUser is optional, ignore errors
-                try { await api.auth.getUser(me.id); } catch { }
+                // User data already fetched from getMe, no need for additional getUser call
             } catch (error) {
                 console.error('Failed to load my page data:', error);
             }

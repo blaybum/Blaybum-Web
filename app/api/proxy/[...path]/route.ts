@@ -8,7 +8,8 @@ async function handleProxy(req: NextRequest, context: { params: Promise<{ path?:
   const { path } = await context.params;
   const segments = path ?? [];
   const url = new URL(req.url);
-  const targetUrl = `${API_BASE_URL}/${segments.join('/')}${url.search}`;
+  const trailingSlash = url.pathname.endsWith('/') ? '/' : '';
+  const targetUrl = `${API_BASE_URL}/${segments.join('/')}${trailingSlash}${url.search}`;
 
   const headers = new Headers(req.headers);
   headers.delete('host');
