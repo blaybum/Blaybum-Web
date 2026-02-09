@@ -38,39 +38,72 @@ export default function FarmHistoryPage() {
                 Array.from({ length: lastDate }, (_, i) => ({ day: i + 1, state: 'empty' as DayState }))
             );
 
+            // Fetch data with error handling for each request
+            let weeklyData = null;
+            let pomoData = null;
+
             try {
-                const [weekly, pomoDaily] = await Promise.all([
-                    api.statistics.plannerWeekly(weekStartStr),
-                    api.statistics.pomoDaily(todayStr),
-                ]);
+                // Try to fetch weekly stats, but don't fail properly if backend errors (500)
+                try {
+                    weeklyData = await api.statistics.plannerWeekly(weekStartStr);
+                } catch (e) {
+                    console.warn('Failed to load weekly stats, using empty default:', e);
+                    // Mock empty data structure to prevent page crash
+                    weeklyData = {
+                        week_start: weekStartStr,
+                        week_end: weekStartStr,
+                        total_todos: 0,
+                        completed_todos: 0,
+                        completion_rate: 0,
+                        daily_breakdown: []
+                    };
+                }
 
-                const breakdownMap = new Map<string, DailyBreakdown>();
-                weekly.daily_breakdown.forEach((item) => breakdownMap.set(item.date, item));
+                try {
+                    pomoData = await api.statistics.pomoDaily(todayStr);
+                } catch (e) {
+                    console.warn('Failed to load pomo stats:', e);
+                    pomoData = {
+                        date: todayStr,
+                        total_study_time_minutes: 0,
+                        pomo_count: 0,
+                        completed_todos: 0,
+                        total_distraction_count: 0
+                    };
+                }
 
-                const generated = Array.from({ length: lastDate }, (_, i) => {
-                    const day = i + 1;
-                    const date = new Date(year, month, day);
-                    const dateKey = date.toISOString().slice(0, 10);
-                    const breakdown = breakdownMap.get(dateKey);
-                    let state: DayState = 'empty';
-                    if (breakdown && breakdown.total > 0) {
-                        if (breakdown.completed >= breakdown.total) {
-                            state = 'harvested';
-                        } else if (breakdown.completed > 0) {
-                            state = 'sprout';
-                        } else {
-                            state = 'seeded';
-                        }
+                if (weeklyData && pomoData) {
+                    const breakdownMap = new Map<string, DailyBreakdown>();
+                    // Handle case where daily_breakdown might be undefined or map (due to backend bug)
+                    if (Array.isArray(weeklyData.daily_breakdown)) {
+                        weeklyData.daily_breakdown.forEach((item) => breakdownMap.set(item.date, item));
                     }
-                    return { day, state };
-                });
 
-                setDaysInMonth(generated);
-                setSummary({
-                    studyDays: weekly.daily_breakdown.filter((item) => item.total > 0).length,
-                    harvested: weekly.daily_breakdown.filter((item) => item.total > 0 && item.completed >= item.total).length,
-                    totalHours: Math.round(pomoDaily.total_study_time_minutes / 60),
-                });
+                    const generated = Array.from({ length: lastDate }, (_, i) => {
+                        const day = i + 1;
+                        const date = new Date(year, month, day);
+                        const dateKey = date.toISOString().slice(0, 10);
+                        const breakdown = breakdownMap.get(dateKey);
+                        let state: DayState = 'empty';
+                        if (breakdown && breakdown.total > 0) {
+                            if (breakdown.completed >= breakdown.total) {
+                                state = 'harvested';
+                            } else if (breakdown.completed > 0) {
+                                state = 'sprout';
+                            } else {
+                                state = 'seeded';
+                            }
+                        }
+                        return { day, state };
+                    });
+
+                    setDaysInMonth(generated);
+                    setSummary({
+                        studyDays: Array.isArray(weeklyData.daily_breakdown) ? weeklyData.daily_breakdown.filter((item) => item.total > 0).length : 0,
+                        harvested: Array.isArray(weeklyData.daily_breakdown) ? weeklyData.daily_breakdown.filter((item) => item.total > 0 && item.completed >= item.total).length : 0,
+                        totalHours: Math.round(pomoData.total_study_time_minutes / 60),
+                    });
+                }
             } catch (error) {
                 console.error(error);
             }
