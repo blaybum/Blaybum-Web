@@ -2,23 +2,89 @@
 
 import { Sprout, Wheat, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import WeatherBackground from '@/components/farm/WeatherBackground';
+import { api } from '@/lib/api';
+import type { DailyBreakdown } from '@/lib/api/types';
+import useAuthGuard from '@/lib/useAuthGuard';
+
+type DayState = 'empty' | 'seeded' | 'sprout' | 'harvested';
+
+function getStartOfWeek(date: Date) {
+    const day = date.getDay();
+    const diff = date.getDate() - day;
+    return new Date(date.setDate(diff));
+}
 
 export default function FarmHistoryPage() {
+    const isAuthed = useAuthGuard();
     const [weather, setWeather] = useState<'sunny' | 'rainy' | 'cloudy' | 'snowy'>('sunny');
+    const [daysInMonth, setDaysInMonth] = useState<{ day: number; state: DayState }[]>([]);
+    const [summary, setSummary] = useState({ studyDays: 0, harvested: 0, totalHours: 0 });
 
-    // 31 days mock data
-    // states: 'empty' | 'seeded' | 'sprout' | 'harvested'
-    const daysInMonth = Array.from({ length: 31 }, (_, i) => {
-        const day = i + 1;
-        let state: 'empty' | 'seeded' | 'sprout' | 'harvested' = 'empty';
-        if ([2, 3, 4, 5, 6, 7].includes(day)) state = 'seeded';
-        if ([8, 9, 10, 11, 12].includes(day)) state = 'sprout';
-        if ([13, 16, 20].includes(day)) state = 'harvested';
+    const today = useMemo(() => new Date(), []);
 
-        return { day, state };
-    });
+    useEffect(() => {
+        const load = async () => {
+            if (!isAuthed) return;
+            const todayStr = today.toISOString().slice(0, 10);
+            const weekStart = getStartOfWeek(new Date(today));
+            const weekStartStr = weekStart.toISOString().slice(0, 10);
+
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            setDaysInMonth(
+                Array.from({ length: lastDate }, (_, i) => ({ day: i + 1, state: 'empty' as DayState }))
+            );
+
+            try {
+                const [weekly, pomoDaily] = await Promise.all([
+                    api.statistics.plannerWeekly(weekStartStr),
+                    api.statistics.pomoDaily(todayStr),
+                ]);
+
+                const breakdownMap = new Map<string, DailyBreakdown>();
+                weekly.daily_breakdown.forEach((item) => breakdownMap.set(item.date, item));
+
+                const generated = Array.from({ length: lastDate }, (_, i) => {
+                    const day = i + 1;
+                    const date = new Date(year, month, day);
+                    const dateKey = date.toISOString().slice(0, 10);
+                    const breakdown = breakdownMap.get(dateKey);
+                    let state: DayState = 'empty';
+                    if (breakdown && breakdown.total > 0) {
+                        if (breakdown.completed >= breakdown.total) {
+                            state = 'harvested';
+                        } else if (breakdown.completed > 0) {
+                            state = 'sprout';
+                        } else {
+                            state = 'seeded';
+                        }
+                    }
+                    return { day, state };
+                });
+
+                setDaysInMonth(generated);
+                setSummary({
+                    studyDays: weekly.daily_breakdown.filter((item) => item.total > 0).length,
+                    harvested: weekly.daily_breakdown.filter((item) => item.total > 0 && item.completed >= item.total).length,
+                    totalHours: Math.round(pomoDaily.total_study_time_minutes / 60),
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        };
+        load();
+    }, [today, isAuthed]);
+
+    if (!isAuthed) {
+        return (
+            <div className="min-h-screen flex items-center justify-center text-sm text-gray-500">
+                로그인 확인 중...
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col min-h-screen bg-[#E6F4F1] relative overflow-hidden">
@@ -26,7 +92,7 @@ export default function FarmHistoryPage() {
 
             {/* Header */}
             <div className="pt-8 pb-4 px-6 text-center relative z-10">
-                <h1 className="text-2xl font-bold text-gray-800">3월의 공부 농장</h1>
+                <h1 className="text-2xl font-bold text-gray-800">{today.getMonth() + 1}월의 공부 농장</h1>
                 <p className="text-gray-500 text-sm mt-1">탭해서 날짜별 기록을 확인하세요</p>
 
                 {/* Weather Toggles (Hidden but kept for demo if needed, or remove) */}
@@ -83,7 +149,7 @@ export default function FarmHistoryPage() {
                             <Sprout className="text-green-600" size={24} />
                         </div>
                         <div className="text-center">
-                            <div className="font-bold text-xl">12일</div>
+                            <div className="font-bold text-xl">{summary.studyDays}일</div>
                             <div className="text-xs text-gray-500">공부한 날</div>
                         </div>
                     </div>
@@ -93,7 +159,7 @@ export default function FarmHistoryPage() {
                             <Wheat className="text-yellow-600" size={24} />
                         </div>
                         <div className="text-center">
-                            <div className="font-bold text-xl">5개</div>
+                            <div className="font-bold text-xl">{summary.harvested}개</div>
                             <div className="text-xs text-gray-500">수확 완료</div>
                         </div>
                     </div>
@@ -103,7 +169,7 @@ export default function FarmHistoryPage() {
                             <Clock className="text-blue-600" size={24} />
                         </div>
                         <div className="text-center">
-                            <div className="font-bold text-xl">24시간</div>
+                            <div className="font-bold text-xl">{summary.totalHours}시간</div>
                             <div className="text-xs text-gray-500">총 공부</div>
                         </div>
                     </div>

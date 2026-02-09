@@ -1,9 +1,12 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState, useEffect } from 'react';
 import { ArrowLeft, BookOpen, Clock, Activity, TrendingUp, CheckCircle2, Lightbulb } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Line } from 'react-chartjs-2';
+import { api } from '@/lib/api';
+import type { PomoResponse } from '@/lib/api/types';
+import useAuthGuard from '@/lib/useAuthGuard';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -26,17 +29,124 @@ ChartJS.register(
 );
 
 export default function SubjectStatsPage({ params }: { params: Promise<{ subject: string }> }) {
+    const isAuthed = useAuthGuard();
     const { subject: subjectParam } = use(params);
     const router = useRouter();
     const subject = decodeURIComponent(subjectParam);
 
     // Chart Data
+    const [stats, setStats] = useState<{
+        labels: string[];
+        data: number[];
+        totalTime: number;
+        pomoCount: number;
+        avgFocus: number;
+        bestHour: number | null;
+        avgSessionMinutes: number;
+        improvementRate: number;
+    } | null>(null);
+
+    useEffect(() => {
+        const load = async () => {
+            if (!isAuthed) return;
+            const list = await api.pomos.list({ limit: 100 });
+            // Filter by subject
+            const subjectPomos = list.filter((p: PomoResponse) => p.category === subject);
+
+            // Calculate stats
+            let totalMinutes = 0;
+            let totalDistractions = 0;
+            const dailyMap = new Map<string, number>();
+            const hourlyMap = new Map<number, number>();
+            const now = new Date();
+            const last7Start = new Date(now);
+            last7Start.setDate(now.getDate() - 6);
+            const prev7Start = new Date(now);
+            prev7Start.setDate(now.getDate() - 13);
+            const prev7End = new Date(now);
+            prev7End.setDate(now.getDate() - 7);
+            let lastMinutes = 0;
+            let lastCount = 0;
+            let prevMinutes = 0;
+            let prevCount = 0;
+
+            subjectPomos.forEach((p: PomoResponse) => {
+                const start = new Date(p.edit_start_time || p.real_start_time);
+                const end = new Date(p.edit_end_time || p.real_end_time);
+                const minutes = (end.getTime() - start.getTime()) / 60000;
+                if (minutes > 0) {
+                    totalMinutes += minutes;
+                    const dateKey = start.toISOString().slice(5, 10); // MM-DD
+                    dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + minutes);
+                    const hour = start.getHours();
+                    hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + minutes);
+                    if (start >= last7Start) {
+                        lastMinutes += minutes;
+                        lastCount += 1;
+                    } else if (start >= prev7Start && start <= prev7End) {
+                        prevMinutes += minutes;
+                        prevCount += 1;
+                    }
+                }
+                totalDistractions += p.distraction_count;
+            });
+
+            // Generate last 7 days labels
+            const labels = [];
+            const dataPoints = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const key = d.toISOString().slice(5, 10);
+                labels.push(key);
+                dataPoints.push(Math.round(dailyMap.get(key) || 0));
+            }
+
+            let bestHour: number | null = null;
+            let bestMinutes = 0;
+            hourlyMap.forEach((minutes, hour) => {
+                if (minutes > bestMinutes) {
+                    bestMinutes = minutes;
+                    bestHour = hour;
+                }
+            });
+
+            const avgSessionMinutes = subjectPomos.length ? Math.round(totalMinutes / subjectPomos.length) : 0;
+            const avgFocus = subjectPomos.length
+                ? Math.max(0, Math.min(100, Math.round(100 - (totalDistractions / subjectPomos.length) * 10)))
+                : 100;
+            const lastAvg = lastCount ? lastMinutes / lastCount : 0;
+            const prevAvg = prevCount ? prevMinutes / prevCount : 0;
+            const improvementRate = prevAvg ? Math.round(((lastAvg - prevAvg) / prevAvg) * 100) : 0;
+
+            setStats({
+                labels,
+                data: dataPoints,
+                totalTime: Math.round(totalMinutes),
+                pomoCount: subjectPomos.length,
+                avgFocus,
+                bestHour,
+                avgSessionMinutes,
+                improvementRate,
+            });
+        };
+        load();
+    }, [subject, isAuthed]);
+
+    if (!isAuthed) {
+        return (
+            <div className="min-h-screen flex items-center justify-center text-sm text-gray-500">
+                로그인 확인 중...
+            </div>
+        );
+    }
+
     const data = {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        labels: stats?.labels ?? [],
         datasets: [
             {
-                label: '집중력',
-                data: [65, 75, 78, 72, 80, 85],
+                label: '집중 시간 (분)',
+                data: stats?.data ?? [],
                 borderColor: '#EF4444',
                 backgroundColor: 'rgba(239, 68, 68, 0.5)',
                 tension: 0.4,
@@ -46,6 +156,9 @@ export default function SubjectStatsPage({ params }: { params: Promise<{ subject
             },
         ],
     };
+
+    const displayTotalTime = stats ? (stats.totalTime > 60 ? `${Math.floor(stats.totalTime / 60)}h ${stats.totalTime % 60}m` : `${stats.totalTime}m`) : '0m';
+    const bestHourLabel = stats && stats.bestHour !== null ? `${stats.bestHour}시` : '-';
 
     const options = {
         responsive: true,
@@ -86,20 +199,20 @@ export default function SubjectStatsPage({ params }: { params: Promise<{ subject
                     <BookOpen size={60} />
                 </div>
 
-                <h2 className="text-4xl font-bold mb-1">78%</h2>
-                <p className="opacity-80 text-sm mb-6">전체 성장률</p>
+                <h2 className="text-4xl font-bold mb-1">{stats?.avgFocus ?? 0}%</h2>
+                <p className="opacity-80 text-sm mb-6">평균 집중도</p>
 
                 <div className="flex justify-between gap-2">
                     <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 flex-1 text-center">
-                        <div className="font-bold text-xl">12</div>
-                        <div className="text-[10px] opacity-80">완료 과제</div>
+                        <div className="font-bold text-xl">{stats?.pomoCount ?? 0}</div>
+                        <div className="text-[10px] opacity-80">집중 세션</div>
                     </div>
                     <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 flex-1 text-center">
-                        <div className="font-bold text-xl">18h</div>
+                        <div className="font-bold text-xl">{displayTotalTime}</div>
                         <div className="text-[10px] opacity-80">공부 시간</div>
                     </div>
                     <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-3 flex-1 text-center">
-                        <div className="font-bold text-xl">85%</div>
+                        <div className="font-bold text-xl">{stats?.avgFocus ?? 0}%</div>
                         <div className="text-[10px] opacity-80">평균 집중도</div>
                     </div>
                 </div>
@@ -130,25 +243,31 @@ export default function SubjectStatsPage({ params }: { params: Promise<{ subject
                 <div className="bg-[#FFF1F2] rounded-2xl p-4 flex justify-between items-center">
                     <div>
                         <div className="text-sm text-gray-600 font-bold mb-1">최고 집중 시간대</div>
-                        <div className="text-xs text-gray-400">오전 시간대에 가장 높은 집중력을 보였어요</div>
+                        <div className="text-xs text-gray-400">가장 많이 집중한 시간대예요</div>
                     </div>
-                    <span className="bg-[#EF4444] text-white px-3 py-1 rounded-full text-xs font-bold">오전 10시</span>
+                    <span className="bg-[#EF4444] text-white px-3 py-1 rounded-full text-xs font-bold">
+                        {bestHourLabel}
+                    </span>
                 </div>
 
                 <div className="bg-[#FFF7ED] rounded-2xl p-4 flex justify-between items-center">
                     <div>
                         <div className="text-sm text-gray-600 font-bold mb-1">평균 집중 지속시간</div>
-                        <div className="text-xs text-gray-400">한 번에 평균 45분 동안 집중할 수 있어요</div>
+                        <div className="text-xs text-gray-400">한 번에 평균 집중한 시간이에요</div>
                     </div>
-                    <span className="bg-[#F97316] text-white px-3 py-1 rounded-full text-xs font-bold">45분</span>
+                    <span className="bg-[#F97316] text-white px-3 py-1 rounded-full text-xs font-bold">
+                        {stats?.avgSessionMinutes ?? 0}분
+                    </span>
                 </div>
 
                 <div className="bg-[#F0FDF4] rounded-2xl p-4 flex justify-between items-center">
                     <div>
-                        <div className="text-sm text-gray-600 font-bold mb-1">집중력 향상률</div>
-                        <div className="text-xs text-gray-400">지난주 대비 집중력이 12% 향상되었어요</div>
+                        <div className="text-sm text-gray-600 font-bold mb-1">집중력 변화</div>
+                        <div className="text-xs text-gray-400">최근 7일 평균 대비 변화율이에요</div>
                     </div>
-                    <span className="bg-[#22C55E] text-white px-3 py-1 rounded-full text-xs font-bold">+12%</span>
+                    <span className="bg-[#22C55E] text-white px-3 py-1 rounded-full text-xs font-bold">
+                        {stats?.improvementRate ?? 0}%
+                    </span>
                 </div>
             </div>
 
