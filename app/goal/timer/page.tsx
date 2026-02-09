@@ -29,8 +29,12 @@ export default function TimerPage() {
         const load = async () => {
             if (!isAuthed) return;
             if (!id) return;
-            const fetched = await api.todos.get(id);
-            setTodo(fetched);
+            try {
+                const fetched = await api.todos.get(id);
+                setTodo(fetched);
+            } catch (error) {
+                console.error('Failed to load todo:', error);
+            }
         };
         load();
     }, [isAuthed]);
@@ -45,52 +49,70 @@ export default function TimerPage() {
         const now = new Date().toISOString();
         setStartIso((prev) => prev ?? now);
         if (pomoId || !todo) return;
-        const created = await api.pomos.create({
-            planner_id: todo.planner_id,
-            todo_id: todo.todo_id,
-            real_start_time: now,
-            real_end_time: now,
-            category: '기타',
-        });
-        setPomoId(created.id);
-        await api.pomos.addConcentration(created.id, { event_type: 'PICK_UP', timestamp: now });
+        try {
+            const created = await api.pomos.create({
+                planner_id: todo.planner_id,
+                todo_id: todo.todo_id,
+                real_start_time: now,
+                real_end_time: now,
+                category: '기타',
+            });
+            setPomoId(created.id);
+            await api.pomos.addConcentration(created.id, { event_type: 'PICK_UP', timestamp: now });
+        } catch (error) {
+            console.error('Failed to start pomo session:', error);
+        }
     };
 
     const handlePause = async () => {
         if (!isAuthed) return;
         if (!pomoId) return;
-        await api.pomos.addConcentration(pomoId, { event_type: 'PUT_DOWN', timestamp: new Date().toISOString() });
+        try {
+            await api.pomos.addConcentration(pomoId, { event_type: 'PUT_DOWN', timestamp: new Date().toISOString() });
+        } catch (error) {
+            console.error('Failed to log pause:', error);
+        }
     };
 
     const handleResume = async () => {
         if (!isAuthed) return;
         if (!pomoId) return;
-        await api.pomos.addConcentration(pomoId, { event_type: 'PICK_UP', timestamp: new Date().toISOString() });
+        try {
+            await api.pomos.addConcentration(pomoId, { event_type: 'PICK_UP', timestamp: new Date().toISOString() });
+        } catch (error) {
+            console.error('Failed to log resume:', error);
+        }
     };
 
     const handleConfirmQuit = async () => {
         if (!isAuthed) return;
-        const endIso = new Date().toISOString();
-        const start = startIso ?? new Date(Date.now() - elapsedTime * 1000).toISOString();
+        try {
+            const endIso = new Date().toISOString();
+            const start = startIso ?? new Date(Date.now() - elapsedTime * 1000).toISOString();
 
-        let finalPomoId = pomoId;
-        if (!finalPomoId && todo) {
-            const created = await api.pomos.create({
-                planner_id: todo.planner_id,
-                todo_id: todo.todo_id,
-                real_start_time: start,
-                real_end_time: endIso,
-                category: '기타',
-            });
-            finalPomoId = created.id;
+            let finalPomoId = pomoId;
+            if (!finalPomoId && todo) {
+                const created = await api.pomos.create({
+                    planner_id: todo.planner_id,
+                    todo_id: todo.todo_id,
+                    real_start_time: start,
+                    real_end_time: endIso,
+                    category: '기타',
+                });
+                finalPomoId = created.id;
+            }
+
+            if (finalPomoId) {
+                await api.pomos.update(finalPomoId, { edit_start_time: start, edit_end_time: endIso });
+                await api.pomos.addConcentration(finalPomoId, { event_type: 'PUT_DOWN', timestamp: endIso });
+            }
+
+            router.push(`/goal/timer/complete?time=${elapsedTime}&pomoId=${finalPomoId ?? ''}`);
+        } catch (error) {
+            console.error('Failed to complete pomo session:', error);
+            // Still navigate to complete page even on error
+            router.push(`/goal/timer/complete?time=${elapsedTime}&pomoId=${pomoId ?? ''}`);
         }
-
-        if (finalPomoId) {
-            await api.pomos.update(finalPomoId, { edit_start_time: start, edit_end_time: endIso });
-            await api.pomos.addConcentration(finalPomoId, { event_type: 'PUT_DOWN', timestamp: endIso });
-        }
-
-        router.push(`/goal/timer/complete?time=${elapsedTime}&pomoId=${finalPomoId ?? ''}`);
     };
 
     if (!isAuthed) {

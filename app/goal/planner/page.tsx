@@ -50,40 +50,53 @@ export default function PlannerPage() {
         const load = async () => {
             if (!isAuthed) return;
             setLoading(true);
-            let current = (await api.planners.list({ start_date: today, end_date: today }))[0];
-            if (!current) {
-                // If viewing past date and doesn't exist, maybe don't create automatically?
-                // But for now, let's auto-create to keep it simple or follow logic.
-                // If it's today, create. If it's past, create?
-                // The original logic auto-created.
-                current = await api.planners.create({ plan_date: today });
-            }
-            const fetchedPlanner = await api.planners.get(current.planner_id);
-            setPlanner(fetchedPlanner);
-            setGoalDraft(fetchedPlanner.daily_goal?.toString() ?? '');
+            try {
+                let planners = await api.planners.list({ start_date: today, end_date: today });
+                let current = planners[0];
+                if (!current) {
+                    // Auto-create planner for today if it doesn't exist
+                    try {
+                        current = await api.planners.create({ plan_date: today });
+                    } catch (createError) {
+                        console.error('Failed to create planner:', createError);
+                        setLoading(false);
+                        return;
+                    }
+                }
 
-            let list = await api.todos.list({ planner_id: current.planner_id, sort_by: 'order_index' });
-            if (list.length === 0) {
-                // Only add defaults if it's explicitly "today" maybe? Or always?
-                // Original logic added defaults.
-                await api.todos.create({
-                    planner_id: current.planner_id,
-                    title: '문학 작품 분석하기',
-                    description: '현대시 3편 감상문 작성',
-                    priority: 'high',
-                    estimated_duration_minutes: 50,
-                });
-                await api.todos.create({
-                    planner_id: current.planner_id,
-                    title: '독해 지문 풀이 5개',
-                    description: '어휘 정리 포함',
-                    priority: 'medium',
-                    estimated_duration_minutes: 40,
-                });
-                list = await api.todos.list({ planner_id: current.planner_id, sort_by: 'order_index' });
+                const fetchedPlanner = await api.planners.get(current.planner_id);
+                setPlanner(fetchedPlanner);
+                setGoalDraft(fetchedPlanner.daily_goal?.toString() ?? '');
+
+                let list = await api.todos.list({ planner_id: current.planner_id, sort_by: 'order_index' });
+                if (list.length === 0) {
+                    // Add default todos for new planners
+                    try {
+                        await api.todos.create({
+                            planner_id: current.planner_id,
+                            title: '문학 작품 분석하기',
+                            description: '현대시 3편 감상문 작성',
+                            priority: 'high',
+                            estimated_duration_minutes: 50,
+                        });
+                        await api.todos.create({
+                            planner_id: current.planner_id,
+                            title: '독해 지문 풀이 5개',
+                            description: '어휘 정리 포함',
+                            priority: 'medium',
+                            estimated_duration_minutes: 40,
+                        });
+                        list = await api.todos.list({ planner_id: current.planner_id, sort_by: 'order_index' });
+                    } catch (todoError) {
+                        console.error('Failed to create default todos:', todoError);
+                    }
+                }
+                setTodos(list);
+            } catch (error) {
+                console.error('Failed to load planner:', error);
+            } finally {
+                setLoading(false);
             }
-            setTodos(list);
-            setLoading(false);
         };
         load();
     }, [today, isAuthed]);

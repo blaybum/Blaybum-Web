@@ -8,10 +8,10 @@ import { EnvelopIcon, LockIcon, GoogleIcon, AppleIcon, InfoIcon, ShieldIcon, Dat
 import { api } from "@/lib/api";
 
 const Form = () => {
-  const [ email, setEmail ] = useState('');
-  const [ password, setPassword ] = useState('');
-  const [ remember, setRemember ] = useState(false);
-  const [ isLoading, setIsLoading ] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const onClickLogin = async (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -60,19 +60,8 @@ const Form = () => {
     alert('재설정 안내 메일을 보냈어요.');
   };
 
-  const onClickRegister = async () => {
-    const emailInput = window.prompt('회원가입 이메일을 입력해주세요.');
-    if (!emailInput) return;
-    const passwordInput = window.prompt('비밀번호를 입력해주세요.');
-    if (!passwordInput) return;
-    const nameInput = window.prompt('이름(닉네임)을 입력해주세요.');
-    try {
-      await api.auth.register({ email: emailInput, password: passwordInput, username: nameInput ?? undefined });
-      alert('회원가입이 완료되었습니다. 이메일 인증을 진행해주세요.');
-    } catch (error) {
-      console.error(error);
-      alert('회원가입에 실패했어요.');
-    }
+  const onClickRegister = () => {
+    router.push('/auth/register');
   };
 
   const onClickVerify = async () => {

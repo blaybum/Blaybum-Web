@@ -15,23 +15,35 @@ export default function GoalPage() {
     useEffect(() => {
         const load = async () => {
             if (!isAuthed) return;
-            const today = new Date().toISOString().slice(0, 10);
-            const [health, db, daily] = await Promise.all([
-                api.health.check(),
-                api.health.dbTest(),
-                api.statistics.daily(today),
-            ]);
-            setStatus({ health: health.status, db: db.status });
-            setTodaySummary({ total: daily.total_todos, completed: daily.completed_todos });
-            const totalSlots = 6;
-            const seeds = Math.min(totalSlots, Math.max(1, daily.total_todos));
-            const sprouts = Math.min(seeds, daily.completed_todos);
-            const data: Array<'empty' | 'seed' | 'sprout'> = Array.from({ length: totalSlots }, (_, i) => {
-                if (i < sprouts) return 'sprout';
-                if (i < seeds) return 'seed';
-                return 'empty';
-            });
-            setGridData(data);
+            try {
+                const today = new Date().toISOString().slice(0, 10);
+                const [healthResult, dbResult, dailyResult] = await Promise.allSettled([
+                    api.health.check(),
+                    api.health.dbTest(),
+                    api.statistics.daily(today),
+                ]);
+
+                const health = healthResult.status === 'fulfilled' ? healthResult.value : { status: 'error' };
+                const db = dbResult.status === 'fulfilled' ? dbResult.value : { status: 'error' };
+                const daily = dailyResult.status === 'fulfilled' ? dailyResult.value : { total_todos: 0, completed_todos: 0 };
+
+                setStatus({ health: health.status, db: db.status });
+                setTodaySummary({ total: daily.total_todos ?? 0, completed: daily.completed_todos ?? 0 });
+
+                const totalSlots = 6;
+                const seeds = Math.min(totalSlots, Math.max(1, daily.total_todos ?? 0));
+                const sprouts = Math.min(seeds, daily.completed_todos ?? 0);
+                const data: Array<'empty' | 'seed' | 'sprout'> = Array.from({ length: totalSlots }, (_, i) => {
+                    if (i < sprouts) return 'sprout';
+                    if (i < seeds) return 'seed';
+                    return 'empty';
+                });
+                setGridData(data);
+            } catch (error) {
+                console.error('Failed to load goal page data:', error);
+                setStatus({ health: 'error', db: 'error' });
+                setGridData(Array(6).fill('empty'));
+            }
         };
         load();
     }, [isAuthed]);

@@ -36,8 +36,12 @@ export default function TimerCompletePage() {
         const load = async () => {
             if (!isAuthed) return;
             if (!pomoId) return;
-            const fetched = await api.pomos.get(pomoId);
-            setPomo(fetched);
+            try {
+                const fetched = await api.pomos.get(pomoId);
+                setPomo(fetched);
+            } catch (error) {
+                console.error('Failed to load pomo:', error);
+            }
         };
         load();
     }, [pomoId, isAuthed]);
@@ -45,23 +49,33 @@ export default function TimerCompletePage() {
     const handleEdit = async () => {
         if (!isAuthed) return;
         if (!pomoId) return;
-        const minutesInput = window.prompt('수정할 집중 시간(분)을 입력해주세요.', `${Math.max(1, Math.round(time / 60))}`);
-        if (!minutesInput) return;
-        const minutes = Number(minutesInput);
-        if (Number.isNaN(minutes)) return;
-        const start = pomo?.edit_start_time ?? pomo?.real_start_time ?? new Date().toISOString();
-        const end = new Date(new Date(start).getTime() + minutes * 60000).toISOString();
-        const updated = await api.pomos.update(pomoId, { edit_start_time: start, edit_end_time: end });
-        setPomo(updated);
-        alert('집중 시간이 수정되었습니다.');
+        try {
+            const minutesInput = window.prompt('수정할 집중 시간(분)을 입력해주세요.', `${Math.max(1, Math.round(time / 60))}`);
+            if (!minutesInput) return;
+            const minutes = Number(minutesInput);
+            if (Number.isNaN(minutes)) return;
+            const start = pomo?.edit_start_time ?? pomo?.real_start_time ?? new Date().toISOString();
+            const end = new Date(new Date(start).getTime() + minutes * 60000).toISOString();
+            const updated = await api.pomos.update(pomoId, { edit_start_time: start, edit_end_time: end });
+            setPomo(updated);
+            alert('집중 시간이 수정되었습니다.');
+        } catch (error) {
+            console.error('Failed to update pomo:', error);
+            alert('수정에 실패했습니다.');
+        }
     };
 
     const handleDelete = async () => {
         if (!isAuthed) return;
         if (!pomoId) return;
         if (!confirm('이 기록을 삭제할까요?')) return;
-        await api.pomos.delete(pomoId);
-        router.push('/goal');
+        try {
+            await api.pomos.delete(pomoId);
+            router.push('/goal');
+        } catch (error) {
+            console.error('Failed to delete pomo:', error);
+            alert('삭제에 실패했습니다.');
+        }
     };
 
     if (!isAuthed) {

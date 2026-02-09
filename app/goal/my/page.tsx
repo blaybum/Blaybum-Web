@@ -25,17 +25,25 @@ export default function MyPage() {
     useEffect(() => {
         const load = async () => {
             if (!isAuthed) return;
-            const me = await api.auth.getMe();
-            setUser(me);
-            const [fetchedStats, weekly, daily] = await Promise.all([
-                api.statistics.pomoMe(),
-                api.statistics.plannerWeekly(weekStartStr),
-                api.statistics.daily(todayStr),
-            ]);
-            setStats(fetchedStats);
-            setWeeklyStats(weekly);
-            setDailyStats(daily);
-            await api.auth.getUser(me.id);
+            try {
+                const me = await api.auth.getMe();
+                setUser(me);
+
+                const [statsResult, weeklyResult, dailyResult] = await Promise.allSettled([
+                    api.statistics.pomoMe(),
+                    api.statistics.plannerWeekly(weekStartStr),
+                    api.statistics.daily(todayStr),
+                ]);
+
+                if (statsResult.status === 'fulfilled') setStats(statsResult.value);
+                if (weeklyResult.status === 'fulfilled') setWeeklyStats(weeklyResult.value);
+                if (dailyResult.status === 'fulfilled') setDailyStats(dailyResult.value);
+
+                // getUser is optional, ignore errors
+                try { await api.auth.getUser(me.id); } catch { }
+            } catch (error) {
+                console.error('Failed to load my page data:', error);
+            }
         };
         load();
     }, [isAuthed, todayStr, weekStartStr]);
