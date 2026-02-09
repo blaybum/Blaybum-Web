@@ -46,22 +46,6 @@ export const Checkbox = styled.input`
   height: 16px;
 `;
 
-export const Button = styled.button`
-  width: 100%;
-  padding: 12px;
-  color: ${theme.colors.white};
-  font-weight: 500;
-  border: none;
-  border-radius: 12px;
-  background-color: ${theme.colors.primary[500]};
-
-  transition: 0.1s;
-
-  &:hover {
-    background-color: ${theme.colors.primary[600]};
-  }
-`;
-
 export const Oauth = styled(Row)`
   width: 100%;
   padding: 12px;
