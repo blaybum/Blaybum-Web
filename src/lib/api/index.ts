@@ -21,7 +21,7 @@ import type {
   ApiResponse,
 } from './types';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://blaybum.haeyul.cloud:8000';
+const BASE_URL = '/api/proxy';
 
 async function request<T>(
   endpoint: string,

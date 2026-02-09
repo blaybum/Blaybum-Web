@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   compiler: {
     emotion: true,
   },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'placehold.co' },
+      { protocol: 'http', hostname: 'placehold.co' },
+    ],
+  },
 };
 
 export default nextConfig;
