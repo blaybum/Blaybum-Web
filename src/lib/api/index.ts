@@ -379,6 +379,7 @@ export const api = {
           return upsertLocalPomo({
             ...existing,
             ...data,
+            category: data.category ?? existing.category,
             edit_start_time: data.edit_start_time ?? existing.edit_start_time,
             edit_end_time: data.edit_end_time ?? existing.edit_end_time,
           });
@@ -394,6 +395,7 @@ export const api = {
             return upsertLocalPomo({
               ...existing,
               ...data,
+              category: data.category ?? existing.category,
               edit_start_time: data.edit_start_time ?? existing.edit_start_time,
               edit_end_time: data.edit_end_time ?? existing.edit_end_time,
             });
