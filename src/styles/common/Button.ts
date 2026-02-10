@@ -2,7 +2,27 @@
 import styled from '@emotion/styled';
 import { theme } from '@/styles/theme';
 
+type ButtonSize = 'md' | 'sm';
 type ButtonColor = 'primary' | 'muted';
+
+const getButtonSize = (
+  size: ButtonSize,
+) => {
+  switch (size) {
+    case 'md':
+      return `
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 12px;
+      `;
+    case 'sm':
+      return `
+        padding: 8px 12px;
+        font-weight: 400;
+        border-radius: 8px;
+      `;
+  }
+}
 
 const getButtonColor = (
   color: ButtonColor,
@@ -32,17 +52,16 @@ const getButtonColor = (
 }
 
 export const Button = styled.button<{
+  size: ButtonSize;
   color: ButtonColor;
 }>`
-  width: 100%;
-  padding: 12px 16px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 4px;
   font-weight: 500;
-  border-radius: 12px;
   transition: 0.1s;
+  ${({ size }) => getButtonSize(size)}
   ${({ color }) => getButtonColor(color)}
 `;

@@ -8,26 +8,55 @@ import { EnvelopIcon, LockIcon, GoogleIcon, AppleIcon, InfoIcon, ShieldIcon, Dat
 import { api } from "@/lib/api";
 
 const Form = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [ email, setEmail ] = useState('');
+  const [ password, setPassword ] = useState('');
+  const [ remember, setRemember ] = useState(false);
+  const [ isLoading, setIsLoading ] = useState(false);
+  const [ error, setError ] = useState('');
   const router = useRouter();
 
   const onClickLogin = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     if (!email || !password) {
-      alert('이메일과 비밀번호를 입력해주세요.');
+      setError('이메일과 비밀번호를 입력하세요');
       return;
     }
+
+    setIsLoading(true);
+    setError('');
+
     try {
-      setIsLoading(true);
-      await api.auth.login({ email, password });
-      await api.auth.getMe();
-      router.push('/goal');
-    } catch (error) {
-      console.error(error);
-      alert('로그인에 실패했어요. 잠시 후 다시 시도해주세요.');
+      const form = new URLSearchParams();
+      form.set('grant_type', '');
+      form.set('username', email);
+      form.set('password', password);
+      form.set('scope', '');
+      form.set('client_id', '');
+      form.set('client_secret', '');
+
+      const response = await fetch('http://blaybum.haeyul.cloud:8000/auth/jwt/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+        },
+        body: form.toString(),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const detail = Array.isArray(data?.detail) ? data.detail[0]?.msg : null;
+        throw new Error(detail || '로그인에 실패했습니다');
+      }
+
+      const storage = remember ? localStorage : sessionStorage;
+      storage.setItem('access_token', data.access_token);
+      storage.setItem('refresh_token', data.refresh_token);
+      storage.setItem('token_type', data.token_type);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '로그인에 실패했습니다';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -131,23 +160,13 @@ const Form = () => {
               <Txt as='p' weight='light'> 로그인 상태 유지 </Txt>
             </Row>
           </Stack>
-          <Button color='primary' onClick={onClickLogin} disabled={isLoading}>
+          <Button size='md' color='primary' onClick={onClickLogin}>
             {isLoading ? '로그인 중...' : '로그인'}
           </Button>
-          <Row gap='md' align='center'>
-            <Txt as='p' weight='light' color='secondary' onClick={onClickForgotPassword} role='button' style={{ cursor: 'pointer' }}>
-              비밀번호를 잊으셨나요?
-            </Txt>
-            <Txt as='p' weight='light' color='highlight' onClick={onClickRegister} role='button' style={{ cursor: 'pointer' }}>
-              회원가입
-            </Txt>
-            <Txt as='p' weight='light' color='highlight' onClick={onClickVerify} role='button' style={{ cursor: 'pointer' }}>
-              이메일 인증
-            </Txt>
-            <Txt as='p' weight='light' color='highlight' onClick={onClickResetPassword} role='button' style={{ cursor: 'pointer' }}>
-              비밀번호 재설정
-            </Txt>
-          </Row>
+          {error ? (
+            <Txt as='p' weight='light' color='highlight'>{error}</Txt>
+          ) : null}
+          <Txt as='p' weight='light' color='secondary'> 비밀번호를 잊으셨나요? </Txt>
         </Stack>
       </Stack>
       <Row gap='lg' align='center' width='100%'>
@@ -156,11 +175,11 @@ const Form = () => {
         <Line />
       </Row>
       <Stack gap='md' width='100%'>
-        <Button color='muted' onClick={onClickOauthGoogle}>
+        <Button size='md' color='muted' onClick={onClickOauthGoogle}>
           <GoogleIcon size={20} />
           <Txt as='p' weight='light'> Google </Txt>
         </Button>
-        <Button color='muted' onClick={onClickOauthApple}>
+        <Button size='md' color='muted' onClick={onClickOauthApple}>
           <AppleIcon size={20} />
           <Txt as='p' weight='light'> Apple </Txt>
         </Button>
