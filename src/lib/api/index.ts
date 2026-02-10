@@ -31,6 +31,54 @@ let weeklyStatsBackendDown = false;
 
 const POMO_LOCAL_KEY = 'pomo_local_cache';
 
+function describeBody(body: RequestInit['body']) {
+  if (!body) return null;
+  if (typeof body === 'string') return body;
+  if (typeof URLSearchParams !== 'undefined' && body instanceof URLSearchParams) return body.toString();
+  if (typeof FormData !== 'undefined' && body instanceof FormData) {
+    const entries: Record<string, string> = {};
+    body.forEach((value, key) => {
+      entries[key] = typeof value === 'string' ? value : '[file]';
+    });
+    return entries;
+  }
+  if (typeof Blob !== 'undefined' && body instanceof Blob) return `Blob(${body.size})`;
+  if (body instanceof ArrayBuffer) return `ArrayBuffer(${body.byteLength})`;
+  try {
+    return JSON.stringify(body);
+  } catch {
+    return String(body);
+  }
+}
+
+function logApiError(details: {
+  url: string;
+  method: string;
+  requestHeaders: Headers;
+  requestBody: RequestInit['body'];
+  status: number;
+  statusText: string;
+  responseText: string;
+}) {
+  const headerObj: Record<string, string> = {};
+  details.requestHeaders.forEach((value, key) => {
+    headerObj[key] = value;
+  });
+  console.groupCollapsed(`[api error] ${details.method} ${details.url} -> ${details.status}`);
+  console.log('request', {
+    url: details.url,
+    method: details.method,
+    headers: headerObj,
+    body: describeBody(details.requestBody),
+  });
+  console.log('response', {
+    status: details.status,
+    statusText: details.statusText,
+    body: details.responseText,
+  });
+  console.groupEnd();
+}
+
 function readLocalPomos(): PomoResponse[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -123,7 +171,8 @@ async function request<T>(
     headers,
   };
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, config);
+  const url = `${BASE_URL}${endpoint}`;
+  const response = await fetch(url, config);
 
   if (!response.ok) {
     // Handle 401 with token refresh
@@ -152,6 +201,15 @@ async function request<T>(
       }
     }
     const errorBody = await response.text();
+    logApiError({
+      url,
+      method: config.method ?? 'GET',
+      requestHeaders: headers,
+      requestBody: config.body,
+      status: response.status,
+      statusText: response.statusText,
+      responseText: errorBody,
+    });
     throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorBody}`);
   }
 
