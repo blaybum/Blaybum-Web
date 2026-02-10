@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || 'http://blaybum.haeyul.cloud:8000').replace(/\/$/, '');
+
 const nextConfig: NextConfig = {
   output: "standalone",
   compiler: {
@@ -10,6 +12,19 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'placehold.co' },
       { protocol: 'http', hostname: 'placehold.co' },
     ],
+  },
+  skipTrailingSlashRedirect: true,
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*/',
+        destination: `${apiBase}/:path*/`,
+      },
+      {
+        source: '/api/:path*',
+        destination: `${apiBase}/:path*`,
+      },
+    ];
   },
 };
 

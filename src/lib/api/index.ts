@@ -21,7 +21,7 @@ import type {
   ApiResponse,
 } from './types';
 
-const BASE_URL = '/api/proxy';
+const BASE_URL = '/api';
 
 // Flag to prevent multiple refresh attempts
 let isRefreshing = false;
@@ -247,14 +247,19 @@ export const api = {
     reorder: (id: string, data: TodoReorderRequest) => request<TodoResponse>(`/todos/${id}/reorder`, { method: 'PATCH', body: JSON.stringify(data) }),
   },
   pomos: {
-    list: (params: { page?: number; limit?: number } = {}) =>
-      request<any>(`/pomos/${queryString(params)}`).then(res => {
+    list: async (params: { page?: number; limit?: number } = {}) => {
+      try {
+        const res = await request<any>(`/pomos/${queryString(params)}`);
         if (res && Array.isArray(res.items)) return res.items as PomoResponse[];
         // data: { items: [] } case handled by request unwrap + this check
         if (res && res.data && Array.isArray(res.data.items)) return res.data.items as PomoResponse[];
         if (Array.isArray(res)) return res as PomoResponse[];
         return [] as PomoResponse[];
-      }),
+      } catch (error) {
+        console.warn('Failed to load pomos list:', error);
+        return [] as PomoResponse[];
+      }
+    },
     create: (data: PomoCreateRequest) => request<PomoResponse>('/pomos/', { method: 'POST', body: JSON.stringify(data) }),
     get: (id: string) => request<PomoResponse>(`/pomos/${id}`),
     update: (id: string, data: PomoUpdateRequest) => request<PomoResponse>(`/pomos/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
@@ -263,7 +268,33 @@ export const api = {
   },
   statistics: {
     daily: (date: string) => request<PlannerDailyStatisticsResponse>(`/statistics/daily?date=${date}`),
-    plannerWeekly: (startDate: string) => request<PlannerWeeklyStatisticsResponse>(`/statistics/planner/weekly?start_date=${startDate}`),
+    plannerWeekly: async (startDate: string) => {
+      try {
+        return await request<PlannerWeeklyStatisticsResponse>(`/statistics/planner/weekly?start_date=${startDate}`);
+      } catch (error) {
+        console.warn('Failed to load weekly planner statistics:', error);
+        const start = new Date(`${startDate}T00:00:00`);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        const daily_breakdown = Array.from({ length: 7 }, (_, idx) => {
+          const d = new Date(start);
+          d.setDate(start.getDate() + idx);
+          return {
+            date: d.toISOString().slice(0, 10),
+            total: 0,
+            completed: 0,
+          };
+        });
+        return {
+          week_start: start.toISOString().slice(0, 10),
+          week_end: end.toISOString().slice(0, 10),
+          total_todos: 0,
+          completed_todos: 0,
+          completion_rate: 0,
+          daily_breakdown,
+        } satisfies PlannerWeeklyStatisticsResponse;
+      }
+    },
     pomoDaily: (date: string) => request<PomoDailyStatisticsResponse>(`/statistics/pomo/daily?date=${date}`),
     pomoMe: () => request<PomoMeStatisticsResponse>('/statistics/pomo/me'),
   },
