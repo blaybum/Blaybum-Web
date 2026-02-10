@@ -26,6 +26,51 @@ const BASE_URL = '/api';
 // Flag to prevent multiple refresh attempts
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
+let pomoBackendDown = false;
+let weeklyStatsBackendDown = false;
+
+const POMO_LOCAL_KEY = 'pomo_local_cache';
+
+function readLocalPomos(): PomoResponse[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(POMO_LOCAL_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as PomoResponse[];
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalPomos(pomos: PomoResponse[]) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(POMO_LOCAL_KEY, JSON.stringify(pomos));
+}
+
+function upsertLocalPomo(pomo: PomoResponse) {
+  const list = readLocalPomos();
+  const idx = list.findIndex((item) => item.id === pomo.id);
+  if (idx >= 0) {
+    list[idx] = { ...list[idx], ...pomo, updated_at: new Date().toISOString() };
+  } else {
+    list.unshift(pomo);
+  }
+  writeLocalPomos(list);
+  return pomo;
+}
+
+function removeLocalPomo(id: string) {
+  const list = readLocalPomos().filter((item) => item.id !== id);
+  writeLocalPomos(list);
+}
+
+function shouldFallback(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message || '';
+  return msg.includes('500') || msg.includes('Failed to fetch');
+}
 
 async function tryRefreshToken(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
@@ -63,11 +108,15 @@ async function request<T>(
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
   const tokenType = typeof window !== 'undefined' ? localStorage.getItem('token_type') : null;
 
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `${tokenType ?? 'Bearer'} ${token}` }),
-    ...options.headers,
-  };
+  const headers = new Headers();
+  headers.set('Content-Type', 'application/json');
+  if (token) headers.set('Authorization', `${tokenType ?? 'Bearer'} ${token}`);
+  if (options.headers) {
+    const extra = new Headers(options.headers);
+    extra.forEach((value, key) => {
+      headers.set(key, value);
+    });
+  }
 
   const config: RequestInit = {
     ...options,
@@ -248,6 +297,7 @@ export const api = {
   },
   pomos: {
     list: async (params: { page?: number; limit?: number } = {}) => {
+      if (pomoBackendDown) return readLocalPomos();
       try {
         const res = await request<any>(`/pomos/${queryString(params)}`);
         if (res && Array.isArray(res.items)) return res.items as PomoResponse[];
@@ -256,23 +306,186 @@ export const api = {
         if (Array.isArray(res)) return res as PomoResponse[];
         return [] as PomoResponse[];
       } catch (error) {
-        console.warn('Failed to load pomos list:', error);
-        return [] as PomoResponse[];
+        if (shouldFallback(error)) {
+          pomoBackendDown = true;
+          return readLocalPomos();
+        }
+        throw error;
       }
     },
-    create: (data: PomoCreateRequest) => request<PomoResponse>('/pomos/', { method: 'POST', body: JSON.stringify(data) }),
-    get: (id: string) => request<PomoResponse>(`/pomos/${id}`),
-    update: (id: string, data: PomoUpdateRequest) => request<PomoResponse>(`/pomos/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-    delete: (id: string) => request<void>(`/pomos/${id}`, { method: 'DELETE' }),
-    addConcentration: (id: string, data: ConcentrationCreate) => request<ConcentrationResponse>(`/pomos/${id}/concentration`, { method: 'POST', body: JSON.stringify(data) }),
+    create: async (data: PomoCreateRequest) => {
+      if (pomoBackendDown) {
+        const now = new Date().toISOString();
+        const local: PomoResponse = {
+          id: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `local-${Date.now()}`,
+          planner_id: data.planner_id ?? null,
+          todo_id: data.todo_id ?? null,
+          real_start_time: data.real_start_time ?? now,
+          real_end_time: data.real_end_time ?? data.real_start_time ?? now,
+          category: data.category ?? '기타',
+          distraction_count: 0,
+          edit_start_time: data.real_start_time ?? now,
+          edit_end_time: data.real_end_time ?? data.real_start_time ?? now,
+          created_at: now,
+          updated_at: now,
+        };
+        return upsertLocalPomo(local);
+      }
+      try {
+        const created = await request<PomoResponse>('/pomos/', { method: 'POST', body: JSON.stringify(data) });
+        return created;
+      } catch (error) {
+        if (shouldFallback(error)) {
+          pomoBackendDown = true;
+          const now = new Date().toISOString();
+          const local: PomoResponse = {
+            id: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `local-${Date.now()}`,
+            planner_id: data.planner_id ?? null,
+            todo_id: data.todo_id ?? null,
+            real_start_time: data.real_start_time ?? now,
+            real_end_time: data.real_end_time ?? data.real_start_time ?? now,
+            category: data.category ?? '기타',
+            distraction_count: 0,
+            edit_start_time: data.real_start_time ?? now,
+            edit_end_time: data.real_end_time ?? data.real_start_time ?? now,
+            created_at: now,
+            updated_at: now,
+          };
+          return upsertLocalPomo(local);
+        }
+        throw error;
+      }
+    },
+    get: async (id: string) => {
+      if (pomoBackendDown) {
+        const local = readLocalPomos().find((item) => item.id === id);
+        if (local) return local;
+      }
+      try {
+        return await request<PomoResponse>(`/pomos/${id}`);
+      } catch (error) {
+        if (shouldFallback(error)) {
+          pomoBackendDown = true;
+          const local = readLocalPomos().find((item) => item.id === id);
+          if (local) return local;
+        }
+        throw error;
+      }
+    },
+    update: async (id: string, data: PomoUpdateRequest) => {
+      if (pomoBackendDown) {
+        const existing = readLocalPomos().find((item) => item.id === id);
+        if (existing) {
+          return upsertLocalPomo({
+            ...existing,
+            ...data,
+            edit_start_time: data.edit_start_time ?? existing.edit_start_time,
+            edit_end_time: data.edit_end_time ?? existing.edit_end_time,
+          });
+        }
+      }
+      try {
+        return await request<PomoResponse>(`/pomos/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+      } catch (error) {
+        if (shouldFallback(error)) {
+          pomoBackendDown = true;
+          const existing = readLocalPomos().find((item) => item.id === id);
+          if (existing) {
+            return upsertLocalPomo({
+              ...existing,
+              ...data,
+              edit_start_time: data.edit_start_time ?? existing.edit_start_time,
+              edit_end_time: data.edit_end_time ?? existing.edit_end_time,
+            });
+          }
+        }
+        throw error;
+      }
+    },
+    delete: async (id: string) => {
+      if (pomoBackendDown) {
+        removeLocalPomo(id);
+        return;
+      }
+      try {
+        await request<void>(`/pomos/${id}`, { method: 'DELETE' });
+      } catch (error) {
+        if (shouldFallback(error)) {
+          pomoBackendDown = true;
+          removeLocalPomo(id);
+          return;
+        }
+        throw error;
+      }
+    },
+    addConcentration: async (id: string, data: ConcentrationCreate) => {
+      if (pomoBackendDown) {
+        const existing = readLocalPomos().find((item) => item.id === id);
+        if (existing) {
+          const next = {
+            ...existing,
+            distraction_count: data.event_type === 'PICK_UP' ? existing.distraction_count + 1 : existing.distraction_count,
+          };
+          upsertLocalPomo(next);
+        }
+        return {
+          id: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `local-log-${Date.now()}`,
+          pomo_id: id,
+          event_type: data.event_type,
+          timestamp: data.timestamp ?? new Date().toISOString(),
+        } as ConcentrationResponse;
+      }
+      try {
+        return await request<ConcentrationResponse>(`/pomos/${id}/concentration`, { method: 'POST', body: JSON.stringify(data) });
+      } catch (error) {
+        if (shouldFallback(error)) {
+          pomoBackendDown = true;
+          const existing = readLocalPomos().find((item) => item.id === id);
+          if (existing) {
+            const next = {
+              ...existing,
+              distraction_count: data.event_type === 'PICK_UP' ? existing.distraction_count + 1 : existing.distraction_count,
+            };
+            upsertLocalPomo(next);
+          }
+          return {
+            id: typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `local-log-${Date.now()}`,
+            pomo_id: id,
+            event_type: data.event_type,
+            timestamp: data.timestamp ?? new Date().toISOString(),
+          } as ConcentrationResponse;
+        }
+        throw error;
+      }
+    },
   },
   statistics: {
     daily: (date: string) => request<PlannerDailyStatisticsResponse>(`/statistics/daily?date=${date}`),
     plannerWeekly: async (startDate: string) => {
+      if (weeklyStatsBackendDown) {
+        const start = new Date(`${startDate}T00:00:00`);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        const daily_breakdown = Array.from({ length: 7 }, (_, idx) => {
+          const d = new Date(start);
+          d.setDate(start.getDate() + idx);
+          return { date: d.toISOString().slice(0, 10), total: 0, completed: 0 };
+        });
+        return {
+          week_start: start.toISOString().slice(0, 10),
+          week_end: end.toISOString().slice(0, 10),
+          total_todos: 0,
+          completed_todos: 0,
+          completion_rate: 0,
+          daily_breakdown,
+        } satisfies PlannerWeeklyStatisticsResponse;
+      }
       try {
         return await request<PlannerWeeklyStatisticsResponse>(`/statistics/planner/weekly?start_date=${startDate}`);
       } catch (error) {
-        console.warn('Failed to load weekly planner statistics:', error);
+        if (shouldFallback(error)) {
+          weeklyStatsBackendDown = true;
+        }
         const start = new Date(`${startDate}T00:00:00`);
         const end = new Date(start);
         end.setDate(start.getDate() + 6);
