@@ -10,17 +10,25 @@ export default function RoleSelectionPage() {
   const handleMentee = () => {
     const token = localStorage.getItem('access_token');
     if (!token) {
-      router.push('/auth');
+      router.push('/auth/mentee');
       return;
     }
-    router.push('/goal');
+    router.push('/mentee');
+  };
+
+  const handleMentor = () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      router.push('/auth/mentor');
+      return;
+    }
+    router.push('/mentor');
   };
 
   return (
     <div className="min-h-screen bg-[#FDFBF4] flex flex-col items-center justify-center p-6 font-sans">
       <div className="w-full max-w-md space-y-10">
 
-        {/* Header Section */}
         <div className="text-center space-y-3">
           <h1 className="text-[#8B7355] text-2xl font-bold tracking-tight">
             역할을 선택하세요
@@ -31,10 +39,8 @@ export default function RoleSelectionPage() {
           </div>
         </div>
 
-        {/* Cards Section */}
         <div className="space-y-4">
 
-          {/* Mentee Card */}
           <button onClick={handleMentee} className="block group w-full text-left">
             <div className="bg-white rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-transparent transition-all duration-200 group-hover:border-[#98E6C7] group-active:scale-[0.98]">
               <div className="flex flex-col items-center text-center space-y-4">
@@ -53,8 +59,7 @@ export default function RoleSelectionPage() {
             </div>
           </button>
 
-          {/* Mentor Card */}
-          <Link href="/auth" className="block group">
+          <button onClick={handleMentor} className="block group w-full text-left">
             <div className="bg-white rounded-[24px] p-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-transparent transition-all duration-200 group-hover:border-[#A69076] group-active:scale-[0.98]">
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 flex items-center justify-center">
@@ -70,7 +75,7 @@ export default function RoleSelectionPage() {
                 </div>
               </div>
             </div>
-          </Link>
+          </button>
 
         </div>
       </div>
