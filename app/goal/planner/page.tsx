@@ -39,6 +39,8 @@ export default function PlannerPage() {
     const [todos, setTodos] = useState<TodoResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [goalDraft, setGoalDraft] = useState('');
+    const [savingGoal, setSavingGoal] = useState(false);
+    const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isAuthed) return;
@@ -131,9 +133,20 @@ export default function PlannerPage() {
 
     const handleSaveGoal = async () => {
         if (!planner) return;
-        const goalNum = parseInt(goalDraft, 10);
-        const updated = await api.planners.update(planner.planner_id, { daily_goal: Number.isNaN(goalNum) ? null : goalNum });
-        setPlanner(updated);
+        setSavingGoal(true);
+        setSaveMessage(null);
+        try {
+            const goalNum = parseInt(goalDraft, 10);
+            const updated = await api.planners.update(planner.planner_id, { daily_goal: Number.isNaN(goalNum) ? null : goalNum });
+            setPlanner(updated);
+            setGoalDraft(updated.daily_goal?.toString() ?? '');
+            setSaveMessage('목표가 저장되었습니다.');
+        } catch (error) {
+            console.error('Failed to save goal:', error);
+            setSaveMessage('목표 저장에 실패했습니다.');
+        } finally {
+            setSavingGoal(false);
+        }
     };
 
     const handleDeletePlanner = async () => {
@@ -175,10 +188,14 @@ export default function PlannerPage() {
                 />
                 <button
                     onClick={handleSaveGoal}
-                    className="w-full py-2 rounded-lg bg-green-50 text-green-700 text-sm font-semibold"
+                    disabled={savingGoal}
+                    className="w-full py-2 rounded-lg bg-green-50 text-green-700 text-sm font-semibold disabled:opacity-60"
                 >
-                    목표 저장하기
+                    {savingGoal ? '저장 중...' : '목표 저장하기'}
                 </button>
+                {saveMessage && (
+                    <div className="text-xs text-gray-500">{saveMessage}</div>
+                )}
             </div>
 
             {loading && <div className="text-sm text-gray-400">플래너를 불러오는 중...</div>}
