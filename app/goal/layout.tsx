@@ -15,12 +15,14 @@ export default function GoalLayout({
     return (
         <html lang="kr">
             <body className="antialiased">
-                <div className="min-h-screen bg-[#FDFBF4] text-slate-800 font-sans flex justify-center">
-                    <div className="w-full max-w-md bg-[#FDFBF4] min-h-screen relative shadow-lg">
-                        <main className="pb-20">
+                <div className="min-h-screen bg-neutral-100 flex justify-center items-center">
+                    <div className="w-full max-w-[430px] h-[100dvh] bg-[#FDFBF4] relative shadow-2xl flex flex-col overflow-hidden">
+                        <main className="flex-1 overflow-y-auto pb-24 scrollbar-hide">
                             {children}
                         </main>
-                        <BottomNav />
+                        <div className="absolute bottom-0 left-0 right-0 z-50">
+                            <BottomNav />
+                        </div>
                     </div>
                 </div>
             </body>
