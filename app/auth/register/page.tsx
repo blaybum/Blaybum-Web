@@ -1,11 +1,10 @@
 'use client';
-
 import * as Auth from '@/styles/pages/auth';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Row, Stack, Txt, Input } from '@/components/common';
 import { Icon, Line, Button } from '@/styles/common';
-import { EnvelopIcon, LockIcon, InfoIcon, UserIcon } from '@/asset/icons';
+import { EnvelopIcon, LockIcon, InfoIcon, FilterIcon } from '@/asset/icons';
 import { api } from '@/lib/api';
 import Link from 'next/link';
 
@@ -77,7 +76,7 @@ export default function RegisterPage() {
                     <Txt as="p" weight="light" color="secondary">
                         가입이 완료되었습니다. 로그인하여 서비스를 이용하세요.
                     </Txt>
-                    <Button color="primary" onClick={() => router.push('/auth')}>
+                    <Button size='md' color="primary" onClick={() => router.push('/auth')}>
                         로그인 페이지로 이동
                     </Button>
                 </Stack>
@@ -161,7 +160,7 @@ export default function RegisterPage() {
                                 닉네임
                             </Txt>
                             <Input
-                                icon={<UserIcon size={20} />}
+                                icon={<FilterIcon size={20} />}
                                 placeholder="닉네임 (선택)"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
@@ -172,14 +171,14 @@ export default function RegisterPage() {
                                 이름
                             </Txt>
                             <Input
-                                icon={<UserIcon size={20} />}
+                                icon={<FilterIcon size={20} />}
                                 placeholder="실명 (선택)"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
                             />
                         </Stack>
                     </Stack>
-                    <Button color="primary" disabled={isLoading} onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                    <Button size='md' color="primary" disabled={isLoading} onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                         e.preventDefault();
                         onClickRegister();
                     }}>
