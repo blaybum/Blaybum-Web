@@ -257,6 +257,29 @@ function queryString(params: Record<string, any>) {
   return query.toString() ? `?${query.toString()}` : '';
 }
 
+async function fetchPlannersInRange(startDate: string, endDate: string) {
+  try {
+    const res = await request<any>(`/planners/${queryString({ start_date: startDate, end_date: endDate, page: 1, limit: 200 })}`);
+    if (Array.isArray(res)) return res as PlannerResponse[];
+    if (res && Array.isArray(res.items)) return res.items as PlannerResponse[];
+    if (res && Array.isArray(res.data)) return res.data as PlannerResponse[];
+    return [] as PlannerResponse[];
+  } catch {
+    return [] as PlannerResponse[];
+  }
+}
+
+async function fetchTodosForPlanner(plannerId: string) {
+  try {
+    const res = await request<any>(`/todos/${queryString({ planner_id: plannerId, sort_by: 'order_index' })}`);
+    if (Array.isArray(res)) return res as TodoResponse[];
+    if (res && Array.isArray(res.items)) return res.items as TodoResponse[];
+    return [] as TodoResponse[];
+  } catch {
+    return [] as TodoResponse[];
+  }
+}
+
 export const api = {
   auth: {
     login: async (data: { email?: string; username?: string; password: string }) => {
@@ -526,17 +549,48 @@ export const api = {
         const start = new Date(`${startDate}T00:00:00`);
         const end = new Date(start);
         end.setDate(start.getDate() + 6);
-        const daily_breakdown = Array.from({ length: 7 }, (_, idx) => {
+        const startStr = start.toISOString().slice(0, 10);
+        const endStr = end.toISOString().slice(0, 10);
+
+        const planners = await fetchPlannersInRange(startStr, endStr);
+        const breakdownMap = new Map<string, { total: number; completed: number }>();
+        for (let i = 0; i < 7; i += 1) {
           const d = new Date(start);
-          d.setDate(start.getDate() + idx);
-          return { date: d.toISOString().slice(0, 10), total: 0, completed: 0 };
-        });
+          d.setDate(start.getDate() + i);
+          breakdownMap.set(d.toISOString().slice(0, 10), { total: 0, completed: 0 });
+        }
+
+        let total = 0;
+        let completed = 0;
+        for (const planner of planners) {
+          const todos = await fetchTodosForPlanner(planner.planner_id);
+          for (const todo of todos) {
+            total += 1;
+            const status = String(todo.status);
+            if (status === 'completed' || status === 'done') completed += 1;
+            const day = planner.plan_date;
+            const bucket = breakdownMap.get(day);
+            if (bucket) {
+              bucket.total += 1;
+              if (status === 'completed' || status === 'done') bucket.completed += 1;
+            }
+          }
+        }
+
+        const daily_breakdown = Array.from(breakdownMap.entries()).map(([date, stats]) => ({
+          date,
+          total: stats.total,
+          completed: stats.completed,
+        }));
+
+        const completion_rate = total > 0 ? Math.round((completed / total) * 10000) / 100 : 0;
+
         return {
-          week_start: start.toISOString().slice(0, 10),
-          week_end: end.toISOString().slice(0, 10),
-          total_todos: 0,
-          completed_todos: 0,
-          completion_rate: 0,
+          week_start: startStr,
+          week_end: endStr,
+          total_todos: total,
+          completed_todos: completed,
+          completion_rate,
           daily_breakdown,
         } satisfies PlannerWeeklyStatisticsResponse;
       }
@@ -549,21 +603,48 @@ export const api = {
         const start = new Date(`${startDate}T00:00:00`);
         const end = new Date(start);
         end.setDate(start.getDate() + 6);
-        const daily_breakdown = Array.from({ length: 7 }, (_, idx) => {
+        const startStr = start.toISOString().slice(0, 10);
+        const endStr = end.toISOString().slice(0, 10);
+
+        const planners = await fetchPlannersInRange(startStr, endStr);
+        const breakdownMap = new Map<string, { total: number; completed: number }>();
+        for (let i = 0; i < 7; i += 1) {
           const d = new Date(start);
-          d.setDate(start.getDate() + idx);
-          return {
-            date: d.toISOString().slice(0, 10),
-            total: 0,
-            completed: 0,
-          };
-        });
+          d.setDate(start.getDate() + i);
+          breakdownMap.set(d.toISOString().slice(0, 10), { total: 0, completed: 0 });
+        }
+
+        let total = 0;
+        let completed = 0;
+        for (const planner of planners) {
+          const todos = await fetchTodosForPlanner(planner.planner_id);
+          for (const todo of todos) {
+            total += 1;
+            const status = String(todo.status);
+            if (status === 'completed' || status === 'done') completed += 1;
+            const day = planner.plan_date;
+            const bucket = breakdownMap.get(day);
+            if (bucket) {
+              bucket.total += 1;
+              if (status === 'completed' || status === 'done') bucket.completed += 1;
+            }
+          }
+        }
+
+        const daily_breakdown = Array.from(breakdownMap.entries()).map(([date, stats]) => ({
+          date,
+          total: stats.total,
+          completed: stats.completed,
+        }));
+
+        const completion_rate = total > 0 ? Math.round((completed / total) * 10000) / 100 : 0;
+
         return {
-          week_start: start.toISOString().slice(0, 10),
-          week_end: end.toISOString().slice(0, 10),
-          total_todos: 0,
-          completed_todos: 0,
-          completion_rate: 0,
+          week_start: startStr,
+          week_end: endStr,
+          total_todos: total,
+          completed_todos: completed,
+          completion_rate,
           daily_breakdown,
         } satisfies PlannerWeeklyStatisticsResponse;
       }
