@@ -1,6 +1,6 @@
-export type Priority = 'high' | 'medium' | 'low';
-export type TodoStatus = 'todo' | 'done'; // Inferred from usage in planner page, adapt if different in spec
-export type PomoCategory = '수학' | '영어' | '국어' | '과학' | '사회' | '기타';
+export type Priority = "high" | "medium" | "low";
+export type TodoStatus = "todo" | "done"; // Inferred from usage in planner page, adapt if different in spec
+export type PomoCategory = "WORK" | "STUDY" | "EXERCISE" | "TRAVEL" | "ETC";
 
 export interface PaginationInfo {
   current_page: number;
@@ -36,7 +36,7 @@ export interface UserRead {
   username?: string | null;
   full_name?: string | null;
   profile_image?: string | null;
-  role: 'mentor' | 'mentee';
+  role: "mentor" | "mentee";
 }
 
 // Planners
@@ -175,13 +175,31 @@ export interface PomoMeStatisticsResponse {
 }
 
 export interface ConcentrationCreate {
-  event_type: 'PICK_UP' | 'PUT_DOWN';
+  event_type: "PICK_UP" | "PUT_DOWN";
   timestamp?: string | null;
 }
 
 export interface ConcentrationResponse {
   id: string;
   pomo_id: string;
-  event_type: 'PICK_UP' | 'PUT_DOWN';
+  event_type: "PICK_UP" | "PUT_DOWN";
   timestamp: string;
+}
+
+// Grow
+export interface GrowResponse {
+  id: string;
+  record_date: string;
+  day_number: number;
+  is_fulltime_study: boolean;
+  is_todolist_complete: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Todo Complete
+export interface TodoCompleteResponse {
+  todo_id: string;
+  image_url?: string;
+  completed_at: string;
 }

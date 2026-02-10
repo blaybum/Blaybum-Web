@@ -48,7 +48,7 @@ export default function FeedbackPage() {
             </div>
 
             {/* Action Button */}
-            <Link href="/goal/feedback/1" className="w-full">
+            <Link href="/mentee/feedback/1" className="w-full">
                 <button className="w-full bg-[#22C55E] text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-600 transition-colors shadow-lg flex items-center justify-center gap-2">
                     <Mail size={20} />
                     피드백 확인하기

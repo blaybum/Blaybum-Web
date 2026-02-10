@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import TaskCard from '@/components/goal/TaskCard';
+import TaskCard from '@/components/mentee/TaskCard';
 import { ChevronLeft, Sprout } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
@@ -153,7 +153,7 @@ export default function PlannerPage() {
         if (!planner) return;
         if (!confirm('오늘 플래너를 삭제할까요?')) return;
         await api.planners.delete(planner.planner_id);
-        router.push('/goal');
+        router.push('/mentee');
     };
 
     const firstTodo = todos[0];
@@ -169,7 +169,7 @@ export default function PlannerPage() {
     return (
         <div className="pt-8 px-5 pb-24 space-y-6">
             <div className="flex items-center gap-2 mb-6">
-                <Link href="/goal" className="p-1">
+                <Link href="/mentee" className="p-1">
                     <ChevronLeft className="text-gray-400" />
                 </Link>
                 <div>
@@ -218,7 +218,7 @@ export default function PlannerPage() {
                                 {todo.status === 'done' ? '다시 하기' : '완료 표시'}
                             </button>
                             <Link
-                                href={`/goal/timer?todoId=${todo.todo_id}`}
+                                href={`/mentee/timer?todoId=${todo.todo_id}`}
                                 className="flex-1 py-2 rounded-xl bg-green-400 text-white text-sm font-semibold text-center"
                             >
                                 타이머 시작
@@ -253,7 +253,7 @@ export default function PlannerPage() {
                 </button>
 
                 <Link
-                    href={firstTodo ? `/goal/timer?todoId=${firstTodo.todo_id}` : '/goal/timer'}
+                    href={firstTodo ? `/mentee/timer?todoId=${firstTodo.todo_id}` : '/mentee/timer'}
                     className="block w-full text-center py-4 rounded-2xl bg-green-400/80 text-white font-bold text-lg shadow-[0_4px_0_0_#86D8B1] active:translate-y-[2px] active:shadow-none transition-all hover:bg-green-400"
                 >
                     공부 시작하기

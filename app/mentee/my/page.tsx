@@ -143,7 +143,7 @@ export default function MyPage() {
                 </h2>
 
                 {/* Summary Cards */}
-                <Link href="/goal/my/stats/국어">
+                <Link href="/mentee/my/stats/국어">
                     <div className="bg-[#FFF1F2] rounded-2xl p-5 mb-4 hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer border border-red-100">
                         <div className="flex justify-between items-center mb-3">
                             <div className="flex items-center gap-3">
@@ -161,7 +161,7 @@ export default function MyPage() {
                     </div>
                 </Link>
 
-                <Link href="/goal/my/stats/영어">
+                <Link href="/mentee/my/stats/영어">
                     <div className="bg-[#EFF6FF] rounded-2xl p-5 hover:shadow-lg transition-all transform hover:-translate-y-1 cursor-pointer border border-blue-100">
                         <div className="flex justify-between items-center mb-3">
                             <div className="flex items-center gap-3">
@@ -203,7 +203,7 @@ export default function MyPage() {
                             <button onClick={() => alert('채팅 기능은 준비 중입니다.')} className="flex-1 bg-[#F0FDF4] text-green-700 py-3 rounded-xl font-bold text-sm hover:bg-green-100 transition-colors flex items-center justify-center gap-1">
                                 <MessageCircle size={18} /> 채팅하기
                             </button>
-                            <Link href="/goal/feedback" className="flex-1 w-full">
+                            <Link href="/mentee/feedback" className="flex-1 w-full">
                                 <button className="w-full bg-gray-50 text-gray-700 py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors">
                                     피드백 모아보기
                                 </button>
@@ -211,7 +211,7 @@ export default function MyPage() {
                         </div>
                     </div>
                 ) : (
-                    <Link href="/goal/mentor">
+                    <Link href="/mentee/mentor">
                         <div className="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-green-400 hover:bg-green-50 transition-all group">
                             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center group-hover:bg-white transition-colors">
                                 <UserPlus className="text-gray-400 group-hover:text-green-500 transition-colors" size={32} />

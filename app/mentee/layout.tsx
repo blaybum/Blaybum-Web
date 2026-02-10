@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import BottomNav from '@/components/goal/BottomNav';
+import BottomNav from '@/components/mentee/BottomNav';
 import '../globals.css';
 
 export const metadata: Metadata = {

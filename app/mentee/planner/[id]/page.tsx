@@ -81,7 +81,7 @@ export default function AssignmentDetailPage() {
             {/* Floating Action Button */}
             <div className="fixed bottom-6 left-0 right-0 px-6 max-w-md mx-auto">
                 <Link
-                    href={`/goal/timer?todoId=${todo?.todo_id ?? todoId}`}
+                    href={`/mentee/timer?todoId=${todo?.todo_id ?? todoId}`}
                     className="w-full py-4 rounded-[20px] bg-gray-800 text-white font-bold text-center hover:bg-gray-900 transition-all shadow-lg shadow-gray-200 flex items-center justify-center gap-2"
                 >
                     <Play size={18} fill="currentColor" />
