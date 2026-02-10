@@ -26,7 +26,7 @@ export default function MentorListPage() {
 
             {/* Header */}
             <div className="flex items-center justify-between mb-6 h-10">
-                <Link href="/goal">
+                <Link href="/mentee">
                     <button className="p-2 hover:bg-gray-100 rounded-full text-gray-600">
                         ⬅
                     </button>
@@ -98,7 +98,7 @@ export default function MentorListPage() {
 
             <div className="space-y-4 mb-8">
                 {/* Mentor Card 1 */}
-                <Link href="/goal/mentor/1" className="block">
+                <Link href="/mentee/mentor/1" className="block">
                     <div className="border border-gray-100 rounded-2xl p-4 flex gap-4 items-start hover:shadow-md transition-shadow cursor-pointer bg-white relative">
                         <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden relative shrink-0">
                             <Image src="https://placehold.co/100x100?text=K" alt="Mentor" layout="fill" objectFit="cover" />

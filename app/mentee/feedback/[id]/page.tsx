@@ -40,7 +40,7 @@ export default function FeedbackDetailPage() {
 
     return (
         <div className="min-h-screen bg-white px-6 py-8 space-y-6">
-            <Link href="/goal/feedback" className="text-sm text-gray-500">← 피드백 목록</Link>
+            <Link href="/mentee/feedback" className="text-sm text-gray-500">← 피드백 목록</Link>
 
             <div className="space-y-2">
                 <div className="flex items-center gap-2 text-gray-500 text-sm">

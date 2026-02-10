@@ -173,7 +173,7 @@ export default function FarmDayPage({ params }: { params: Promise<{ day: string 
                     For now, linking to planner might just show today's planner. 
                     I'll link to planner home. 
                 */}
-                <Link href={`/goal/planner?date=${dateStr}`}>
+                <Link href={`/mentee/planner?date=${dateStr}`}>
                     <button className="w-full bg-[#22C55E] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-600 transition-colors">
                         <Calendar size={20} />
                         플래너 보기 ({dayNumber}일)

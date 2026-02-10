@@ -8,11 +8,11 @@ export default function BottomNav() {
     const pathname = usePathname();
 
     const navItems = [
-        { name: '홈', icon: Home, href: '/goal' },
-        { name: '플래너', icon: ListTodo, href: '/goal/planner' },
-        { name: '농장', icon: Sprout, href: '/goal/farm' },
-        { name: '피드백', icon: MessageCircle, href: '/goal/feedback' },
-        { name: '마이', icon: User, href: '/goal/my' },
+        { name: '홈', icon: Home, href: '/mentee' },
+        { name: '플래너', icon: ListTodo, href: '/mentee/planner' },
+        { name: '농장', icon: Sprout, href: '/mentee/farm' },
+        { name: '피드백', icon: MessageCircle, href: '/mentee/feedback' },
+        { name: '마이', icon: User, href: '/mentee/my' },
     ];
 
     return (

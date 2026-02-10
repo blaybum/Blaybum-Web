@@ -143,7 +143,7 @@ export default function FarmHistoryPage() {
                     {daysInMonth.map((item) => (
                         <Link
                             key={item.day}
-                            href={`/goal/farm/${item.day}`}
+                            href={`/mentee/farm/${item.day}`}
                             className={`
                                 aspect-square rounded-lg flex items-center justify-center relative
                                 ${item.state === 'empty' ? 'bg-[#D6C4A0] opacity-60' : ''}
@@ -224,7 +224,7 @@ export default function FarmHistoryPage() {
                     </div>
                 </div>
 
-                <Link href="/goal">
+                <Link href="/mentee">
                     <button className="w-full bg-[#22C55E] text-white py-4 rounded-xl font-bold text-lg hover:bg-green-600 transition-colors">
                         🏠 오늘로 돌아가기
                     </button>

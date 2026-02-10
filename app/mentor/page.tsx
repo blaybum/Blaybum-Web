@@ -2,7 +2,7 @@
 import { Row, Stack, Txt } from '@/components/common';
 import { Icon } from '@/styles/common';
 import { WarningIcon, DocumentIcon, CheckIcon, ChartIcon, ClockIcon, SproutIcon } from '@/asset/icons';
-import * as Styled from '@/styles/pages/dashboard';
+import * as Styled from '@/styles/pages/mentor';
 import type { ReactElement, ReactNode } from 'react';
 
 type PillTone = 'danger' | 'warning' | 'success' | 'info' | 'neutral';

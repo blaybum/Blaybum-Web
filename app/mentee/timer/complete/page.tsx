@@ -71,7 +71,7 @@ export default function TimerCompletePage() {
         if (!confirm('이 기록을 삭제할까요?')) return;
         try {
             await api.pomos.delete(pomoId);
-            router.push('/goal');
+            router.push('/mentee');
         } catch (error) {
             console.error('Failed to delete pomo:', error);
             alert('삭제에 실패했습니다.');
@@ -127,7 +127,7 @@ export default function TimerCompletePage() {
                 >
                     기록 삭제하기
                 </button>
-                <Link href="/goal" className="w-full">
+                <Link href="/mentee" className="w-full">
                     <button className="w-full bg-[#22C55E] text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-600 transition-colors shadow-lg">
                         오늘로 돌아가기
                     </button>

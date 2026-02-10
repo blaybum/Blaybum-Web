@@ -1,6 +1,6 @@
 'use client';
 
-import FarmGrid from '@/components/goal/FarmGrid';
+import FarmGrid from '@/components/mentee/FarmGrid';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
@@ -74,7 +74,7 @@ export default function GoalPage() {
 
             <div className="w-full max-w-xs space-y-4 pt-4">
                 <Link
-                    href="/goal/planner"
+                    href="/mentee/planner"
                     className="block w-full text-center py-4 rounded-2xl bg-green-400/80 text-white font-bold text-lg shadow-[0_4px_0_0_#86D8B1] active:translate-y-[2px] active:shadow-none transition-all hover:bg-green-400"
                 >
                     오늘 공부 시작하기
